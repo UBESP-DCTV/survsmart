@@ -1,0 +1,17 @@
+Package: survsmart
+Title: What the Package Does (One Line, Title Case)
+Version: 0.0.0.9000
+Authors@R: 
+    person("Corrado", "Lanera", , "corrado.lanera@gmail.com", role = c("aut", "cre", "cph"),
+           comment = c(ORCID = "0000-0002-0520-7428"))
+Description: What the package does (one paragraph).
+License: MIT + file LICENSE
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.2.1
+Suggests: 
+    spelling,
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3
+Language: en-US
+URL: https://ubesp-dctv.github.io/survsmart/

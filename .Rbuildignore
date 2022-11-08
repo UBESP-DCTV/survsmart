@@ -1,0 +1,12 @@
+^renv$
+^renv\.lock$
+^survsmart\.Rproj$
+^\.Rproj\.user$
+^dev$
+^\.github$
+^README\.Rmd$
+^LICENSE\.md$
+^CODE_OF_CONDUCT\.md$
+^_pkgdown\.yml$
+^docs$
+^pkgdown$
