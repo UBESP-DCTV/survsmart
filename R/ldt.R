@@ -154,11 +154,11 @@ fit_ldt <- function(pdata, t, L) {
       sum(delta_k_nonzero / kk_nonzero)
   }
 
-  SURV1 <- rep(NA, length(t))
-  SURV2 <- rep(NA, length(t))
-  SE1 <- rep(NA, length(t))
-  SE2 <- rep(NA, length(t))
-  COV12 <- rep(NA, length(t))
+  SURV1 <- rep(NA_real_, length(t))
+  SURV2 <- rep(NA_real_, length(t))
+  SE1 <- rep(NA_real_)
+  SE2 <- rep(NA_real_, length(t))
+  COV12 <- rep(NA_real_, length(t))
 
   for (j in seq_along(t)) {
     ind <- as.numeric(U <= t[j])
