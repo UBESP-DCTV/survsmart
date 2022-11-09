@@ -38,26 +38,26 @@ ldt <- function(db, L = .Machine$double.xmax) {
     purrr::flatten() # two identical results are returned together
 
 
-  results <- list(
-    Call = match.call(),
-    DTR = dtr,
-    records = records,
-    events = events,
-    censorDTR = dtr_censored,
-    censortime = censortime,
-    censorsurv = censorsurv,
+  structure(
+    list(
+      Call = match.call(),
+      DTR = dtr,
+      records = records,
+      events = events,
+      censorDTR = dtr_censored,
+      censortime = censortime,
+      censorsurv = censorsurv,
 
-    time = t, n.risk = n.risk, n.event = n.event,
-    SURV11 = est[["0"]][["SURV1"]], SURV12 = est[["0"]][["SURV2"]],
-    SURV21 = est[["1"]][["SURV1"]], SURV22 = est[["1"]][["SURV2"]],
-    SURV31 = est[["2"]][["SURV1"]], SURV32 = est[["2"]][["SURV2"]],
-    SE11 = est[["0"]]$SE1, SE12 = est[["0"]]$SE2, COV1112 = est[["0"]]$COV12,
-    SE21 = est[["1"]]$SE1, SE22 = est[["1"]]$SE2, COV2122 = est[["1"]]$COV12,
-    SE31 = est[["2"]]$SE1, SE32 = est[["2"]]$SE2, COV3132 = est[["2"]]$COV12
+      time = t, n.risk = n.risk, n.event = n.event,
+      SURV11 = est[["0"]][["SURV1"]], SURV12 = est[["0"]][["SURV2"]],
+      SURV21 = est[["1"]][["SURV1"]], SURV22 = est[["1"]][["SURV2"]],
+      SURV31 = est[["2"]][["SURV1"]], SURV32 = est[["2"]][["SURV2"]],
+      SE11 = est[["0"]]$SE1, SE12 = est[["0"]]$SE2, COV1112 = est[["0"]]$COV12,
+      SE21 = est[["1"]]$SE1, SE22 = est[["1"]]$SE2, COV2122 = est[["1"]]$COV12,
+      SE31 = est[["2"]]$SE1, SE32 = est[["2"]]$SE2, COV3132 = est[["2"]]$COV12
+    ),
+    class = "DTR_gl"
   )
-
-  class(results) <- "DTR_gl"
-  results
 }
 
 
