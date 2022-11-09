@@ -1,8 +1,8 @@
 
 # Use new packages ------------------------------------------------
-used_pkgs <- c("DTR", "checkmate")
+used_pkgs <- c("DTR", "checkmate", "purrr", "dplyr")
 install.packages(used_pkgs, quiet = TRUE)
-lapply(used_pkgs, usethis::use_package) |> invisible()
+purrr::walk(used_pkgs, usethis::use_package)
 usethis::use_tidy_description()
 
 

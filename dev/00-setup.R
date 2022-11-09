@@ -47,6 +47,9 @@ usethis::use_github_actions_badge("covr")
 usethis::use_package("covr", type = "suggests")
 
 
+# NSE
+usethis::use_tidy_eval()
+
 # Final checks ----------------------------------------------------
 usethis::use_tidy_description()
 devtools::document(

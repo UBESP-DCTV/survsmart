@@ -12,11 +12,15 @@ License: MIT + file LICENSE
 URL: https://ubesp-dctv.github.io/survsmart/
 Imports: 
     checkmate,
-    DTR
+    dplyr,
+    DTR,
+    purrr,
+    rlang (>= 0.4.11)
 Suggests: 
     covr,
     devtools,
     lintr,
+    roxygen2,
     spelling,
     testthat (>= 3.0.0),
     usethis

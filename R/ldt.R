@@ -18,16 +18,16 @@ ldt <- function(db, L = .Machine$double.xmax) {
   est2 <- DTR::sub.LDTestimate(pdata = db[db$X == 1, ], t, L)
   cat("Estimating for A3 arm... \n")
   est3 <- DTR::sub.LDTestimate(pdata = db[db$X == 2, ], t, L)
+
   results <- list(
-    Call = match.call(), DTR = c("A1B1", "A1B2", "A2B1", "A2B2", "A3B1", "A3B2"),
-    records = c(
-      sum((db$X == 0 & db$R == 0) | (db$X == 0 & db$R == 1 & db$Z == 0)),
-      sum((db$X == 0 & db$R == 0) | (db$X == 0 & db$R == 1 & db$Z == 1)),
-      sum((db$X == 1 & db$R == 0) | (db$X == 1 & db$R == 1 & db$Z == 0)),
-      sum((db$X == 1 & db$R == 0) | (db$X == 1 & db$R == 1 & db$Z == 1)),
-      sum((db$X == 2 & db$R == 0) | (db$X == 2 & db$R == 1 & db$Z == 0)),
-      sum((db$X == 2 & db$R == 0) | (db$X == 2 & db$R == 1 & db$Z == 1))
-    ),
+    Call = match.call(),
+    DTR = c("A1B1", "A1B2", "A2B1", "A2B2", "A3B1", "A3B2"),
+    records = compute_records(db),
+
+
+
+
+
     events = c(
       sum(db$delta[(db$X == 0 & db$R == 0) | (db$X == 0 & db$R == 1 & db$Z == 0)]),
       sum(db$delta[(db$X == 0 & db$R == 0) | (db$X == 0 & db$R == 1 & db$Z == 1)]),
@@ -167,4 +167,22 @@ ldt <- function(db, L = .Machine$double.xmax) {
 
   class(results) <- "DTR_gl"
   results
+}
+
+
+
+
+compute_record <- function(db, x, z) {
+  sum(
+    (db[["X"]] == x & db[["R"]] == 0) |
+    (db[["X"]] == x & db[["R"]] == 1 & db[["Z"]] == z)
+  )
+}
+
+
+compute_records <- function(db) {
+  list(x = unique(db[["X"]]), z = unique(db[["Z"]])) |>
+    purrr::cross_df() |>
+    dplyr::arrange(.data[["x"]], .data[["z"]]) |>
+    purrr::pmap_int(compute_record, db = db)
 }
