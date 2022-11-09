@@ -54,70 +54,107 @@ ldt <- function(db, L = .Machine$double.xmax) {
     ),
     censorsurv = c(
       apply(
-        as.array(db$U[(db$X ==
-                                 0 & db$R == 1 & db$Z == 0 & db$delta == 0) |
-                                (db$X == 0 & db$R == 0 & db$delta == 0)]),
-        1, function(x) {
+        as.array(
+          db$U[
+            (db$X == 0 & db$R == 1 & db$Z == 0 & db$delta == 0) |
+            (db$X == 0 & db$R == 0 & db$delta == 0)
+          ]
+        ),
+        1,
+        function(x) {
           if (x < min(est1$t)) {
             1
           } else {
-            est1$SURV1[abs(est1$t -
-                                   x) == min(abs(est1$t - x)[est1$t <=
-                                                                     x])]
+            est1$SURV1[
+              abs(est1$t - x) == min(abs(est1$t - x)[est1$t <= x])
+            ]
           }
         }
       ),
-      apply(as.array(db$U[(db$X == 0 & db$R ==
-                                     1 & db$Z == 1 & db$delta == 0) |
-                                    (db$X ==
-                                       0 & db$R == 0 & db$delta == 0)]), 1, function(x) {
-                                         if (x < min(est1$t)) {
-                                           1
-                                         } else {
-                                           est1$SURV2[abs(est1$t -
-                                                                  x) == min(abs(est1$t - x)[est1$t <= x])]
-                                         }
-                                       }),
-      apply(as.array(db$U[(db$X == 1 & db$R ==
-                                     1 & db$Z == 0 & db$delta == 0) | (db$X ==
-                                                                             1 & db$R == 0 & db$delta == 0)]), 1, function(x) {
-                                                                               if (x < min(est2$t)) {
-                                                                                 1
-                                                                               } else {
-                                                                                 est2$SURV1[abs(est2$t -
-                                                                                                        x) == min(abs(est2$t - x)[est2$t <= x])]
-                                                                               }
-                                                                             }),
-      apply(as.array(db$U[(db$X == 1 & db$R ==
-                                     1 & db$Z == 1 & db$delta == 0) | (db$X ==
-                                                                             1 & db$R == 0 & db$delta == 0)]), 1, function(x) {
-                                                                               if (x < min(est2$t)) {
-                                                                                 1
-                                                                               } else {
-                                                                                 est2$SURV2[abs(est2$t -
-                                                                                                        x) == min(abs(est2$t - x)[est2$t <= x])]
-                                                                               }
-                                                                             }),
-      apply(as.array(db$U[(db$X == 2 & db$R ==
-                                     1 & db$Z == 0 & db$delta == 0) | (db$X ==
-                                                                             2 & db$R == 0 & db$delta == 0)]), 1, function(x) {
-                                                                               if (x < min(est3$t)) {
-                                                                                 1
-                                                                               } else {
-                                                                                 est3$SURV1[abs(est3$t -
-                                                                                                        x) == min(abs(est3$t - x)[est3$t <= x])]
-                                                                               }
-                                                                             }),
-      apply(as.array(db$U[(db$X == 2 & db$R ==
-                                     1 & db$Z == 1 & db$delta == 0) | (db$X ==
-                                                                             2 & db$R == 0 & db$delta == 0)]), 1, function(x) {
-                                                                               if (x < min(est3$t)) {
-                                                                                 1
-                                                                               } else {
-                                                                                 est3$SURV2[abs(est3$t -
-                                                                                                        x) == min(abs(est3$t - x)[est3$t <= x])]
-                                                                               }
-                                                                             })
+      apply(
+        as.array(
+          db$U[
+            (db$X == 0 & db$R == 1 & db$Z == 1 & db$delta == 0) |
+            (db$X == 0 & db$R == 0 & db$delta == 0)
+          ]
+        ),
+        1,
+        function(x) {
+          if (x < min(est1$t)) {
+            1
+          } else {
+            est1$SURV2[
+              abs(est1$t - x) == min(abs(est1$t - x)[est1$t <= x])
+            ]
+          }
+        }
+      ),
+      apply(
+        as.array(
+          db$U[
+            (db$X == 1 & db$R == 1 & db$Z == 0 & db$delta == 0) |
+            (db$X == 1 & db$R == 0 & db$delta == 0)
+          ]
+        ),
+        1,
+        function(x) {
+          if (x < min(est2$t)) {
+            1
+          } else {
+            est2$SURV1[
+              abs(est2$t - x) == min(abs(est2$t - x)[est2$t <= x])
+            ]
+          }
+        }
+      ),
+      apply(
+        as.array(
+          db$U[
+            (db$X == 1 & db$R == 1 & db$Z == 1 & db$delta == 0) |
+            (db$X == 1 & db$R == 0 & db$delta == 0)
+          ]
+        ),
+        1,
+        function(x) {
+          if (x < min(est2$t)) {
+            1
+          } else {
+            est2$SURV2[abs(est2$t - x) == min(abs(est2$t - x)[est2$t <= x])]
+          }
+        }
+      ),
+      apply(
+        as.array(
+          db$U[
+            (db$X == 2 & db$R == 1 & db$Z == 0 & db$delta == 0) |
+            (db$X == 2 & db$R == 0 & db$delta == 0)
+          ]
+        ),
+        1,
+        function(x) {
+          if (x < min(est3$t)) {
+            1
+          } else {
+            est3$SURV1[abs(est3$t - x) == min(abs(est3$t - x)[est3$t <= x])]
+          }
+        }
+      ),
+      apply(
+        as.array(
+          db$U[
+            (db$X == 2 & db$R == 1 & db$Z == 1 & db$delta == 0) |
+            (db$X == 2 & db$R == 0 & db$delta == 0)
+          ]
+        ),
+        1,
+        function(x) {
+          if (x < min(est3$t)) {
+            1
+          } else {
+            est3$SURV2[abs(est3$t - x) == min(abs(est3$t - x)[est3$t <= x])]
+          }
+        }
+      )
     ),
     time = t, n.risk = n.risk, n.event = n.event,
     SURV11 = est1$SURV1, SURV12 = est1$SURV2,
@@ -127,6 +164,7 @@ ldt <- function(db, L = .Machine$double.xmax) {
     SE21 = est2$SE1, SE22 = est2$SE2, COV2122 = est2$COV12,
     SE31 = est3$SE1, SE32 = est3$SE2, COV3132 = est3$COV12
   )
+
   class(results) <- "DTR_gl"
   results
 }
