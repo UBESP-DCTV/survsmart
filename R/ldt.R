@@ -150,7 +150,7 @@ fit_ldt <- function(pdata, t, L) {
   s <- rep(0, n)
   for (i in seq_len(n)) {
     sind <- as.numeric(U <= U[i])
-    s[i] <- 1 - sum(delta_k_nonzero * sind[k_nonzero] / kk_nonzero) /
+    s[[i]] <- 1 - sum(delta_k_nonzero * sind[k_nonzero] / kk_nonzero) /
       sum(delta_k_nonzero / kk_nonzero)
   }
 
@@ -162,16 +162,19 @@ fit_ldt <- function(pdata, t, L) {
 
   for (j in seq_along(t)) {
     ind <- as.numeric(U <= t[j])
-    SURV1[j] <- 1 - sum(w1 * ind) / sum(w1)
-    SURV2[j] <- 1 - sum(w2 * ind) / sum(w2)
-    G1 <- G2 <- rep(0, n)
-    E1 <- E2 <- E12 <- rep(0, n)
+    SURV1[[j]] <- 1 - sum(w1 * ind) / sum(w1)
+    SURV2[[j]] <- 1 - sum(w2 * ind) / sum(w2)
+    G1 <- rep(0, n)
+    G2 <- rep(0, n)
+    E1 <- rep(0, n)
+    E2 <- rep(0, n)
+    E12 <- rep(0, n)
     Y <- rep(0, n)
 
     for (k in seq_len(n)) {
       pind <- as.numeric(U >= U[k])
       if (s[k] != 0) {
-        G1[k] <- sum(
+        G1[[k]] <- sum(
           delta_k_nonzero *
           q1_k_nonzero *
           (ind[k_nonzero] - 1 + SURV1[j]) *
@@ -180,7 +183,7 @@ fit_ldt <- function(pdata, t, L) {
         ) / (n * s[k])
       }
       if (s[k] != 0) {
-        G2[k] <- sum(
+        G2[[k]] <- sum(
           delta_k_nonzero *
           q2_k_nonzero *
           (ind[k_nonzero] - 1 + SURV2[j]) *
@@ -188,26 +191,26 @@ fit_ldt <- function(pdata, t, L) {
           kk_nonzero
         ) / (n * s[k])
       }
-      E1[k] <- sum(
+      E1[[k]] <- sum(
         delta_k_nonzero *
         (q1_k_nonzero * (ind[k_nonzero] - 1 + SURV1[j]) - G1[k])^2 *
         pind[k_nonzero] /
         kk_nonzero
       ) / n
-      E2[k] <- sum(
+      E2[[k]] <- sum(
         delta_k_nonzero *
         (q2_k_nonzero * (ind[k_nonzero] - 1 + SURV2[j]) - G2[k])^2 *
         pind[k_nonzero] /
         kk_nonzero
       ) / n
-      E12[k] <- sum(
+      E12[[k]] <- sum(
         delta_k_nonzero *
         (q1_k_nonzero * (ind[k_nonzero] - 1 + SURV1[j]) - G1[k]) *
         (q2_k_nonzero * (ind[k_nonzero] - 1 + SURV2[j]) - G2[k]) *
         pind[k_nonzero] /
         kk_nonzero
       ) / n
-      Y[k] <- sum(pind)
+      Y[[k]] <- sum(pind)
     }
 
     v1 <- sum(
@@ -223,7 +226,7 @@ fit_ldt <- function(pdata, t, L) {
         (U[k_nonzero] <= L) /
         (kk_nonzero * Y[k_nonzero])
       ) / n
-    SE1[j] <- sqrt(v1)
+    SE1[[j]] <- sqrt(v1)
     v2 <- sum(
         delta_k_nonzero *
         q2_k_nonzero^2 *
@@ -237,8 +240,8 @@ fit_ldt <- function(pdata, t, L) {
         (U[k_nonzero] <= L) /
         (kk_nonzero * Y[k_nonzero])
       ) / n
-    SE2[j] <- sqrt(v2)
-    COV12[j] <- sum(
+    SE2[[j]] <- sqrt(v2)
+    COV12[[j]] <- sum(
         delta_k_nonzero *
         q1_k_nonzero *
         q2_k_nonzero *
