@@ -127,7 +127,7 @@ fit_ldt <- function(pdata, t, L) {
   cfit <- summary(survival::survfit(survival::Surv(U, cens) ~ 1))
 
   K <- rep(0, n)
-  for (i in 1:n) {
+  for (i in seq_len(n)) {
     if (round(U[i], 4) < round(min(cfit$time), 4)) {
       K[i] <- 1
     } else {
@@ -135,13 +135,14 @@ fit_ldt <- function(pdata, t, L) {
       K[i] <- cfit$surv[which(dt == max(dt[dt <= 0]))[1]]
     }
   }
+
   w1 <- rep(0, n)
   w2 <- rep(0, n)
   w1[K != 0] <- delta[K != 0] * Q1[K != 0] / K[K != 0]
   w2[K != 0] <- delta[K != 0] * Q2[K != 0] / K[K != 0]
 
   s <- rep(0, n)
-  for (i in 1:n) {
+  for (i in seq_len(n)) {
     sind <- as.numeric(U <= U[i])
     s[i] <- 1 - sum(delta[K != 0] * sind[K != 0] / K[K != 0]) /
       sum(delta[K != 0] / K[K != 0])
@@ -152,14 +153,16 @@ fit_ldt <- function(pdata, t, L) {
   SE1 <- rep(NA, length(t))
   SE2 <- rep(NA, length(t))
   COV12 <- rep(NA, length(t))
-  for (j in 1:length(t)) {
+
+  for (j in seq_along(t)) {
     ind <- as.numeric(U <= t[j])
     SURV1[j] <- 1 - sum(w1 * ind) / sum(w1)
     SURV2[j] <- 1 - sum(w2 * ind) / sum(w2)
     G1 <- G2 <- rep(0, n)
     E1 <- E2 <- E12 <- rep(0, n)
     Y <- rep(0, n)
-    for (k in 1:n) {
+
+    for (k in seq_len(n)) {
       pind <- as.numeric(U >= U[k])
       if (s[k] != 0) {
         G1[k] <- sum(
