@@ -1,7 +1,7 @@
 
 # Use new packages ------------------------------------------------
-used_pkgs <- c("DTR")
-install.packages(used_pkgs)
+used_pkgs <- c("DTR", "checkmate")
+install.packages(used_pkgs, quiet = TRUE)
 lapply(used_pkgs, usethis::use_package) |> invisible()
 usethis::use_tidy_description()
 
@@ -10,6 +10,7 @@ usethis::use_tidy_description()
 
 # Add new functions -----------------------------------------------
 .add_function("ldt")
+.add_function("utils")
 
 
 

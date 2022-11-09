@@ -11,9 +11,9 @@ Description: What the package does (one paragraph).
 License: MIT + file LICENSE
 URL: https://ubesp-dctv.github.io/survsmart/
 Imports: 
+    checkmate,
     DTR
 Suggests: 
-    checkmate,
     covr,
     devtools,
     lintr,

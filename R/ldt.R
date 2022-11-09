@@ -1,83 +1,73 @@
-ldt <- function(data, L = .Machine$double.xmax) {
-  if (is.null(data$X)) {
-    stop("X can not be empty")
-  }
-  if (is.null(data$R)) {
-    stop("R can not be empty")
-  }
-  if (is.null(data$Z)) {
-    stop("Z can not be empty")
-  }
-  if (is.null(data$U)) {
-    stop("U can not be empty")
-  }
-  if (is.null(data$delta)) {
-    stop("delta can not be empty")
-  }
-  if (is.null(L)) {
-    stop("L can not be empty")
-  }
-  if (is.character(L)) {
-    stop("L has to be numeric")
-  }
-  if (L <= 0) {
-    stop("L must be a positive value")
-  }
-  t <- unique(data$U[which(data$delta == 1)])
+ldt <- function(db, L = .Machine$double.xmax) {
+
+  checkmate::assert_data_frame(
+    db,
+    types = c(rep("integerish", 3), "numeric", " integerish"),
+    all.missing = FALSE,
+    min.rows = 4L,
+    ncols = 5L
+  )
+  checkmate::assert_names(
+    names(db),
+    permutation.of = c("X", "R", "Z", "U", "delta")
+  )
+  checkmate::qassert(L, "N1(0,)")
+
+  t <- unique(db$U[which(db$delta == 1)])
   t <- t[order(t)]
   n.risk <- apply(as.array(t), 1, function(x) {
-    sum(as.numeric(data$U >=
+    sum(as.numeric(db$U >=
                      x))
   })
   n.event <- apply(as.array(t), 1, function(x) {
-    length(which(data$U ==
-                   x & data$delta == 1))
+    length(which(db$U ==
+                   x & db$delta == 1))
   })
   cat("Estimating for A1 arm... \n")
-  est1 <- DTR::sub.LDTestimate(pdata = data[which(data$X == 0), ], t, L)
+  est1 <- DTR::sub.LDTestimate(pdata = db[which(db$X == 0), ], t, L)
   cat("Estimating for A2 arm... \n")
-  est2 <- DTR::sub.LDTestimate(pdata = data[which(data$X == 1), ], t, L)
+  est2 <- DTR::sub.LDTestimate(pdata = db[which(db$X == 1), ], t, L)
   cat("Estimating for A3 arm... \n")
-  est3 <- DTR::sub.LDTestimate(pdata = data[which(data$X == 2), ], t, L)
+  est3 <- DTR::sub.LDTestimate(pdata = db[which(db$X == 2), ], t, L)
   results <- list(
     Call = match.call(), DTR = c("A1B1", "A1B2", "A2B1", "A2B2", "A3B1", "A3B2"),
     records = c(
-      length(which((data$X == 0 & data$R == 0) | (data$X == 0 & data$R == 1 & data$Z == 0))),
-      length(which((data$X == 0 & data$R == 0) | (data$X == 0 & data$R == 1 & data$Z == 1))),
-      length(which((data$X == 1 & data$R == 0) | (data$X == 1 & data$R == 1 & data$Z == 0))),
-      length(which((data$X == 1 & data$R == 0) | (data$X == 1 & data$R == 1 & data$Z == 1))),
-      length(which((data$X == 2 & data$R == 0) | (data$X == 2 & data$R == 1 & data$Z == 0))),
-      length(which((data$X == 2 & data$R == 0) | (data$X == 2 & data$R == 1 & data$Z == 1)))
+      length(which((db$X == 0 & db$R == 0) | (db$X == 0 & db$R == 1 & db$Z == 0))),
+      length(which((db$X == 0 & db$R == 0) | (db$X == 0 & db$R == 1 & db$Z == 1))),
+      length(which((db$X == 1 & db$R == 0) | (db$X == 1 & db$R == 1 & db$Z == 0))),
+      length(which((db$X == 1 & db$R == 0) | (db$X == 1 & db$R == 1 & db$Z == 1))),
+      length(which((db$X == 2 & db$R == 0) | (db$X == 2 & db$R == 1 & db$Z == 0))),
+      length(which((db$X == 2 & db$R == 0) | (db$X == 2 & db$R == 1 & db$Z == 1)))
     ),
     events = c(
-      sum(data$delta[which((data$X == 0 & data$R == 0) | (data$X == 0 & data$R == 1 & data$Z == 0))]),
-      sum(data$delta[which((data$X == 0 & data$R == 0) | (data$X == 0 & data$R == 1 & data$Z == 1))]),
-      sum(data$delta[which((data$X == 1 & data$R == 0) | (data$X == 1 & data$R == 1 & data$Z == 0))]),
-      sum(data$delta[which((data$X == 1 & data$R == 0) | (data$X == 1 & data$R == 1 & data$Z == 1))]),
-      sum(data$delta[which((data$X == 2 & data$R == 0) | (data$X == 2 & data$R == 1 & data$Z == 0))]),
-      sum(data$delta[which((data$X == 2 & data$R == 0) | (data$X == 2 & data$R == 1 & data$Z == 1))])
+      sum(db$delta[which((db$X == 0 & db$R == 0) | (db$X == 0 & db$R == 1 & db$Z == 0))]),
+      sum(db$delta[which((db$X == 0 & db$R == 0) | (db$X == 0 & db$R == 1 & db$Z == 1))]),
+      sum(db$delta[which((db$X == 1 & db$R == 0) | (db$X == 1 & db$R == 1 & db$Z == 0))]),
+      sum(db$delta[which((db$X == 1 & db$R == 0) | (db$X == 1 & db$R == 1 & db$Z == 1))]),
+      sum(db$delta[which((db$X == 2 & db$R == 0) | (db$X == 2 & db$R == 1 & db$Z == 0))]),
+      sum(db$delta[which((db$X == 2 & db$R == 0) | (db$X == 2 & db$R == 1 & db$Z == 1))])
     ),
     censorDTR = c(
-      rep("A1B1", length(which((data$X == 0 & data$R == 1 & data$Z == 0 & data$delta == 0) | (data$X == 0 & data$R == 0 & data$delta == 0)))),
-      rep("A1B2", length(which((data$X == 0 & data$R == 1 & data$Z == 1 & data$delta == 0) | (data$X == 0 & data$R == 0 & data$delta == 0)))),
-      rep("A2B1", length(which((data$X == 1 & data$R == 1 & data$Z == 0 & data$delta == 0) | (data$X == 1 & data$R == 0 & data$delta == 0)))),
-      rep("A2B2", length(which((data$X == 1 & data$R == 1 & data$Z == 1 & data$delta == 0) | (data$X == 1 & data$R == 0 & data$delta == 0)))),
-      rep("A3B1", length(which((data$X == 2 & data$R == 1 & data$Z == 0 & data$delta == 0) | (data$X == 2 & data$R == 0 & data$delta == 0)))),
-      rep("A3B2", length(which((data$X == 2 & data$R == 1 & data$Z == 1 & data$delta == 0) | (data$X == 2 & data$R == 0 & data$delta == 0))))
+      rep("A1B1", length(which((db$X == 0 & db$R == 1 & db$Z == 0 & db$delta == 0) | (db$X == 0 & db$R == 0 & db$delta == 0)))),
+      rep("A1B2", length(which((db$X == 0 & db$R == 1 & db$Z == 1 & db$delta == 0) | (db$X == 0 & db$R == 0 & db$delta == 0)))),
+      rep("A2B1", length(which((db$X == 1 & db$R == 1 & db$Z == 0 & db$delta == 0) | (db$X == 1 & db$R == 0 & db$delta == 0)))),
+      rep("A2B2", length(which((db$X == 1 & db$R == 1 & db$Z == 1 & db$delta == 0) | (db$X == 1 & db$R == 0 & db$delta == 0)))),
+      rep("A3B1", length(which((db$X == 2 & db$R == 1 & db$Z == 0 & db$delta == 0) | (db$X == 2 & db$R == 0 & db$delta == 0)))),
+      rep("A3B2", length(which((db$X == 2 & db$R == 1 & db$Z == 1 & db$delta == 0) | (db$X == 2 & db$R == 0 & db$delta == 0))))
     ),
     censortime = c(
-      data$U[which((data$X == 0 & data$R == 1 & data$Z == 0 & data$delta == 0) | (data$X == 0 & data$R == 0 & data$delta == 0))],
-      data$U[which((data$X == 0 & data$R == 1 & data$Z == 1 & data$delta == 0) | (data$X == 0 & data$R == 0 & data$delta == 0))],
-      data$U[which((data$X == 1 & data$R == 1 & data$Z == 0 & data$delta == 0) | (data$X == 1 & data$R == 0 & data$delta == 0))],
-      data$U[which((data$X == 1 & data$R == 1 & data$Z == 1 & data$delta == 0) | (data$X == 1 & data$R == 0 & data$delta == 0))],
-      data$U[which((data$X == 2 & data$R == 1 & data$Z == 0 & data$delta == 0) | (data$X == 2 & data$R == 0 & data$delta == 0))],
-      data$U[which((data$X == 2 & data$R == 1 & data$Z == 1 & data$delta == 0) | (data$X == 2 & data$R == 0 & data$delta == 0))]
+      db$U[which((db$X == 0 & db$R == 1 & db$Z == 0 & db$delta == 0) | (db$X == 0 & db$R == 0 & db$delta == 0))],
+      db$U[which((db$X == 0 & db$R == 1 & db$Z == 1 & db$delta == 0) | (db$X == 0 & db$R == 0 & db$delta == 0))],
+      db$U[which((db$X == 1 & db$R == 1 & db$Z == 0 & db$delta == 0) | (db$X == 1 & db$R == 0 & db$delta == 0))],
+      db$U[which((db$X == 1 & db$R == 1 & db$Z == 1 & db$delta == 0) | (db$X == 1 & db$R == 0 & db$delta == 0))],
+      db$U[which((db$X == 2 & db$R == 1 & db$Z == 0 & db$delta == 0) | (db$X == 2 & db$R == 0 & db$delta == 0))],
+      db$U[which((db$X == 2 & db$R == 1 & db$Z == 1 & db$delta == 0) | (db$X == 2 & db$R == 0 & db$delta == 0))]
     ),
     censorsurv = c(
       apply(
-        as.array(data$U[which((data$X ==
-                                 0 & data$R == 1 & data$Z == 0 & data$delta == 0) |
-                                (data$X == 0 & data$R == 0 & data$delta == 0))]),
+        as.array(db$U[which((db$X ==
+                                 0 & db$R == 1 & db$Z == 0 & db$delta == 0) |
+                                (db$X == 0 & db$R == 0 & db$delta == 0))]),
         1, function(x) {
           if (x < min(est1$t)) {
             1
@@ -88,10 +78,10 @@ ldt <- function(data, L = .Machine$double.xmax) {
           }
         }
       ),
-      apply(as.array(data$U[which((data$X == 0 & data$R ==
-                                     1 & data$Z == 1 & data$delta == 0) |
-                                    (data$X ==
-                                       0 & data$R == 0 & data$delta == 0))]), 1, function(x) {
+      apply(as.array(db$U[which((db$X == 0 & db$R ==
+                                     1 & db$Z == 1 & db$delta == 0) |
+                                    (db$X ==
+                                       0 & db$R == 0 & db$delta == 0))]), 1, function(x) {
                                          if (x < min(est1$t)) {
                                            1
                                          } else {
@@ -99,9 +89,9 @@ ldt <- function(data, L = .Machine$double.xmax) {
                                                                   x) == min(abs(est1$t - x)[which(est1$t <= x)]))]
                                          }
                                        }),
-      apply(as.array(data$U[which((data$X == 1 & data$R ==
-                                     1 & data$Z == 0 & data$delta == 0) | (data$X ==
-                                                                             1 & data$R == 0 & data$delta == 0))]), 1, function(x) {
+      apply(as.array(db$U[which((db$X == 1 & db$R ==
+                                     1 & db$Z == 0 & db$delta == 0) | (db$X ==
+                                                                             1 & db$R == 0 & db$delta == 0))]), 1, function(x) {
                                                                                if (x < min(est2$t)) {
                                                                                  1
                                                                                } else {
@@ -109,9 +99,9 @@ ldt <- function(data, L = .Machine$double.xmax) {
                                                                                                         x) == min(abs(est2$t - x)[which(est2$t <= x)]))]
                                                                                }
                                                                              }),
-      apply(as.array(data$U[which((data$X == 1 & data$R ==
-                                     1 & data$Z == 1 & data$delta == 0) | (data$X ==
-                                                                             1 & data$R == 0 & data$delta == 0))]), 1, function(x) {
+      apply(as.array(db$U[which((db$X == 1 & db$R ==
+                                     1 & db$Z == 1 & db$delta == 0) | (db$X ==
+                                                                             1 & db$R == 0 & db$delta == 0))]), 1, function(x) {
                                                                                if (x < min(est2$t)) {
                                                                                  1
                                                                                } else {
@@ -119,9 +109,9 @@ ldt <- function(data, L = .Machine$double.xmax) {
                                                                                                         x) == min(abs(est2$t - x)[which(est2$t <= x)]))]
                                                                                }
                                                                              }),
-      apply(as.array(data$U[which((data$X == 2 & data$R ==
-                                     1 & data$Z == 0 & data$delta == 0) | (data$X ==
-                                                                             2 & data$R == 0 & data$delta == 0))]), 1, function(x) {
+      apply(as.array(db$U[which((db$X == 2 & db$R ==
+                                     1 & db$Z == 0 & db$delta == 0) | (db$X ==
+                                                                             2 & db$R == 0 & db$delta == 0))]), 1, function(x) {
                                                                                if (x < min(est3$t)) {
                                                                                  1
                                                                                } else {
@@ -129,9 +119,9 @@ ldt <- function(data, L = .Machine$double.xmax) {
                                                                                                         x) == min(abs(est3$t - x)[which(est3$t <= x)]))]
                                                                                }
                                                                              }),
-      apply(as.array(data$U[which((data$X == 2 & data$R ==
-                                     1 & data$Z == 1 & data$delta == 0) | (data$X ==
-                                                                             2 & data$R == 0 & data$delta == 0))]), 1, function(x) {
+      apply(as.array(db$U[which((db$X == 2 & db$R ==
+                                     1 & db$Z == 1 & db$delta == 0) | (db$X ==
+                                                                             2 & db$R == 0 & db$delta == 0))]), 1, function(x) {
                                                                                if (x < min(est3$t)) {
                                                                                  1
                                                                                } else {
