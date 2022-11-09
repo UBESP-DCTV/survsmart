@@ -1,16 +1,5 @@
 ldt <- function(db, L = .Machine$double.xmax) {
-
-  checkmate::assert_data_frame(
-    db,
-    types = c(rep("integerish", 3), "numeric", " integerish"),
-    all.missing = FALSE,
-    min.rows = 4L,
-    ncols = 5L
-  )
-  checkmate::assert_names(
-    names(db),
-    permutation.of = c("X", "R", "Z", "U", "delta")
-  )
+  check_dtr_db(db)
   checkmate::qassert(L, "N1(0,)")
 
   t <- unique(db$U[which(db$delta == 1)])
