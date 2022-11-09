@@ -20,7 +20,7 @@ ldt <- function(db, L = .Machine$double.xmax) {
   est3 <- DTR::sub.LDTestimate(pdata = db[db$X == 2, ], t, L)
 
   dtr <- get_xz_combs(db) |>
-    purrr::pmap_chr(xz_dtr_label)
+    purrr::pmap_chr(xz_dtr_labels, db = db)
 
   records <- get_xz_combs(db) |>
     purrr::pmap_int(xz_n_record, db = db)
@@ -32,22 +32,16 @@ ldt <- function(db, L = .Machine$double.xmax) {
     purrr::pmap(xz_censortimes, db = db) |>
     unlist()
 
+  dtr_censored <- get_xz_combs(db) |>
+    purrr::pmap(xz_dtr_labels, db = db, censored = TRUE) |>
+    unlist()
 
   results <- list(
     Call = match.call(),
     DTR = dtr,
     records = records,
     events = events,
-
-
-    censorDTR = c(
-      rep("A1B1", sum(are_xz(db, 0, 0, censored = TRUE))),
-      rep("A1B2", sum(are_xz(db, 0, 1, censored = TRUE))),
-      rep("A2B1", sum(are_xz(db, 1, 0, censored = TRUE))),
-      rep("A2B2", sum(are_xz(db, 1, 1, censored = TRUE))),
-      rep("A3B1", sum(are_xz(db, 2, 0, censored = TRUE))),
-      rep("A3B2", sum(are_xz(db, 2, 1, censored = TRUE)))
-    ),
+    censorDTR = dtr_censored,
     censortime = censortime,
 
     censorsurv = c(
@@ -200,6 +194,11 @@ xz_censortimes <- function(db, x, z) {
   db[["U"]][are_xz(db = db, x = x, z = z, censored = TRUE)]
 }
 
-xz_dtr_label <- function(x, z) {
-  glue::glue("A{x + 1}B{z + 1}")
+xz_dtr_labels <- function(db, x, z, censored = FALSE) {
+  label <- glue::glue("A{x + 1}B{z + 1}")
+
+  if (censored) {
+    label <- rep(label, sum(are_xz(db, x, z, censored)))
+  }
+  label
 }
