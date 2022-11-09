@@ -1,6 +1,6 @@
 
 # Use new packages ------------------------------------------------
-used_pkgs <- c()
+used_pkgs <- c("DTR")
 install.packages(used_pkgs)
 lapply(used_pkgs, usethis::use_package) |> invisible()
 usethis::use_tidy_description()
@@ -9,7 +9,7 @@ usethis::use_tidy_description()
 
 
 # Add new functions -----------------------------------------------
-# .add_function("fct_name")
+.add_function("ldt")
 
 
 

@@ -10,6 +10,8 @@ Authors@R: c(
 Description: What the package does (one paragraph).
 License: MIT + file LICENSE
 URL: https://ubesp-dctv.github.io/survsmart/
+Imports: 
+    DTR
 Suggests: 
     checkmate,
     covr,
