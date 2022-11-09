@@ -13,9 +13,9 @@ URL: https://ubesp-dctv.github.io/survsmart/
 Imports: 
     checkmate,
     dplyr,
-    DTR,
     purrr,
-    rlang (>= 0.4.11)
+    rlang (>= 0.4.11),
+    survival
 Suggests: 
     covr,
     devtools,

@@ -1,7 +1,9 @@
 
 # Use new packages ------------------------------------------------
-used_pkgs <- c("DTR", "checkmate", "purrr", "dplyr")
-install.packages(used_pkgs, quiet = TRUE)
+used_pkgs <- c("checkmate", "purrr", "dplyr", "survival")
+installed <- rownames(installed.packages())
+
+install.packages(setdiff(used_pkgs, installed), quiet = TRUE)
 purrr::walk(used_pkgs, usethis::use_package)
 usethis::use_tidy_description()
 

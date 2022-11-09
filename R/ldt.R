@@ -106,7 +106,98 @@ ldt_x <- function(db, x, t, L) {
   pdata <- dplyr::filter(db, .data[["X"]] == x)
 
   usethis::ui_todo("Estimating LDT for A{x + 1} arm...")
-  res <- DTR::sub.LDTestimate(pdata = pdata, t, L)
+  res <- fit_ldt(pdata = pdata, t, L)
   usethis::ui_done("LDT for A{x + 1} arm estimated.")
   res
+}
+
+
+fit_ldt <- function(pdata, t, L) {
+  n <- nrow(pdata)
+  R <- pdata$R
+  Z <- pdata$Z
+  U <- pdata$U
+  delta <- pdata$delta
+  cens <- 1 - delta
+  pi.z <- sum(R * Z) / sum(R)
+  Q1 <- (1 - R) + R * (1 - Z) / (1 - pi.z)
+  Q2 <- (1 - R) + R * Z / (pi.z)
+  cfit <- summary(survival::survfit(survival::Surv(U, cens) ~ 1))
+  K <- rep(0, n)
+  for (i in 1:n) {
+    if (round(U[i], 4) < round(min(cfit$time), 4)) {
+      K[i] <- 1
+    } else {
+      dt <- round(cfit$time, 4) - round(U[i], 4)
+      K[i] <- cfit$surv[which(dt == max(dt[dt <= 0]))[1]]
+    }
+  }
+  w1 <- w2 <- rep(0, n)
+  w1[which(K != 0)] <- delta[which(K != 0)] * Q1[which(K !=
+    0)] / K[which(K != 0)]
+  w2[which(K != 0)] <- delta[which(K != 0)] * Q2[which(K !=
+    0)] / K[which(K != 0)]
+  s <- rep(0, n)
+  for (i in 1:n) {
+    sind <- as.numeric(U <= U[i])
+    s[i] <- 1 - sum(delta[which(K != 0)] * sind[which(K !=
+      0)] / K[which(K != 0)]) / sum(delta[which(K != 0)] / K[which(K !=
+      0)])
+  }
+  SURV1 <- SURV2 <- rep(NA, length(t))
+  SE1 <- SE2 <- COV12 <- rep(NA, length(t))
+  for (j in 1:length(t)) {
+    ind <- as.numeric(U <= t[j])
+    SURV1[j] <- 1 - sum(w1 * ind) / sum(w1)
+    SURV2[j] <- 1 - sum(w2 * ind) / sum(w2)
+    G1 <- G2 <- rep(0, n)
+    E1 <- E2 <- E12 <- rep(0, n)
+    Y <- rep(0, n)
+    for (k in 1:n) {
+      pind <- as.numeric(U >= U[k])
+      if (s[k] != 0) {
+        G1[k] <- sum(delta[which(K != 0)] * Q1[which(K !=
+          0)] * (ind[which(K != 0)] - 1 + SURV1[j]) *
+          pind[which(K != 0)] / K[which(K != 0)]) / (n *
+          s[k])
+      }
+      if (s[k] != 0) {
+        G2[k] <- sum(delta[which(K != 0)] * Q2[which(K !=
+          0)] * (ind[which(K != 0)] - 1 + SURV2[j]) *
+          pind[which(K != 0)] / K[which(K != 0)]) / (n *
+          s[k])
+      }
+      E1[k] <- sum(delta[K != 0] * (Q1[K != 0] * (ind[which(K !=
+        0)] - 1 + SURV1[j]) - G1[k])^2 * pind[which(K !=
+        0)] / K[which(K != 0)]) / n
+      E2[k] <- sum(delta[K != 0] * (Q2[K != 0] * (ind[which(K !=
+        0)] - 1 + SURV2[j]) - G2[k])^2 * pind[which(K !=
+        0)] / K[which(K != 0)]) / n
+      E12[k] <- sum(delta[K != 0] * (Q1[K != 0] * (ind[which(K !=
+        0)] - 1 + SURV1[j]) - G1[k]) * (Q2[K != 0] *
+        (ind[which(K != 0)] - 1 + SURV2[j]) - G2[k]) *
+        pind[which(K != 0)] / K[which(K != 0)]) / n
+      Y[k] <- sum(pind)
+    }
+    v1 <- sum(delta[which(K != 0)] * Q1[which(K != 0)]^2 *
+      (ind[which(K != 0)] - 1 + SURV1[j])^2 / K[which(K !=
+        0)]) / (n^2) + sum(E1[which(K != 0)] * (1 - delta[which(K !=
+      0)]) * (U[which(K != 0)] <= L) / (K[which(K != 0)] *
+      Y[which(K != 0)])) / n
+    SE1[j] <- sqrt(v1)
+    v2 <- sum(delta[which(K != 0)] * Q2[which(K != 0)]^2 *
+      (ind[which(K != 0)] - 1 + SURV2[j])^2 / K[which(K !=
+        0)]) / (n^2) + sum(E2[which(K != 0)] * (1 - delta[which(K !=
+      0)]) * (U[which(K != 0)] <= L) / (K[which(K != 0)] *
+      Y[which(K != 0)])) / n
+    SE2[j] <- sqrt(v2)
+    COV12[j] <- sum(delta[which(K != 0)] * Q1[which(K !=
+      0)] * Q2[which(K != 0)] * (ind[which(K != 0)] -
+      1 + SURV1[j]) * (ind[which(K != 0)] - 1 + SURV2[j]) / K[which(K !=
+      0)]) / (n^2) + sum(E12[which(K != 0)] * (1 - delta[which(K !=
+      0)]) * (U[which(K != 0)] <= L) / (K[which(K != 0)] *
+      Y[which(K != 0)])) / n
+  }
+  est <- data.frame(t, SURV1, SURV2, SE1, SE2, COV12)
+  return(est)
 }
