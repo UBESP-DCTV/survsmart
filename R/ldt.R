@@ -19,29 +19,37 @@ ldt <- function(db, L = .Machine$double.xmax) {
   cat("Estimating for A3 arm... \n")
   est3 <- DTR::sub.LDTestimate(pdata = db[db$X == 2, ], t, L)
 
+  dtr <- get_xz_combs(db) |>
+    purrr::pmap_chr(xz_dtr_label)
+
+  records <- get_xz_combs(db) |>
+    purrr::pmap_int(xz_n_record, db = db)
+
+  events <- get_xz_combs(db) |>
+    purrr::pmap_dbl(xz_n_event, db = db)
+
+  censortime <- get_xz_combs(db) |>
+    purrr::pmap(xz_censortimes, db = db) |>
+    unlist()
+
+
   results <- list(
     Call = match.call(),
-    DTR = c("A1B1", "A1B2", "A2B1", "A2B2", "A3B1", "A3B2"),
-    records = compute_records(db),
-    events = compute_events(db),
+    DTR = dtr,
+    records = records,
+    events = events,
 
 
     censorDTR = c(
-      rep("A1B1", sum((db$X == 0 & db$R == 1 & db$Z == 0 & db$delta == 0) | (db$X == 0 & db$R == 0 & db$delta == 0))),
-      rep("A1B2", sum((db$X == 0 & db$R == 1 & db$Z == 1 & db$delta == 0) | (db$X == 0 & db$R == 0 & db$delta == 0))),
-      rep("A2B1", sum((db$X == 1 & db$R == 1 & db$Z == 0 & db$delta == 0) | (db$X == 1 & db$R == 0 & db$delta == 0))),
-      rep("A2B2", sum((db$X == 1 & db$R == 1 & db$Z == 1 & db$delta == 0) | (db$X == 1 & db$R == 0 & db$delta == 0))),
-      rep("A3B1", sum((db$X == 2 & db$R == 1 & db$Z == 0 & db$delta == 0) | (db$X == 2 & db$R == 0 & db$delta == 0))),
-      rep("A3B2", sum((db$X == 2 & db$R == 1 & db$Z == 1 & db$delta == 0) | (db$X == 2 & db$R == 0 & db$delta == 0)))
+      rep("A1B1", sum(are_xz(db, 0, 0, censored = TRUE))),
+      rep("A1B2", sum(are_xz(db, 0, 1, censored = TRUE))),
+      rep("A2B1", sum(are_xz(db, 1, 0, censored = TRUE))),
+      rep("A2B2", sum(are_xz(db, 1, 1, censored = TRUE))),
+      rep("A3B1", sum(are_xz(db, 2, 0, censored = TRUE))),
+      rep("A3B2", sum(are_xz(db, 2, 1, censored = TRUE)))
     ),
-    censortime = c(
-      db$U[(db$X == 0 & db$R == 1 & db$Z == 0 & db$delta == 0) | (db$X == 0 & db$R == 0 & db$delta == 0)],
-      db$U[(db$X == 0 & db$R == 1 & db$Z == 1 & db$delta == 0) | (db$X == 0 & db$R == 0 & db$delta == 0)],
-      db$U[(db$X == 1 & db$R == 1 & db$Z == 0 & db$delta == 0) | (db$X == 1 & db$R == 0 & db$delta == 0)],
-      db$U[(db$X == 1 & db$R == 1 & db$Z == 1 & db$delta == 0) | (db$X == 1 & db$R == 0 & db$delta == 0)],
-      db$U[(db$X == 2 & db$R == 1 & db$Z == 0 & db$delta == 0) | (db$X == 2 & db$R == 0 & db$delta == 0)],
-      db$U[(db$X == 2 & db$R == 1 & db$Z == 1 & db$delta == 0) | (db$X == 2 & db$R == 0 & db$delta == 0)]
-    ),
+    censortime = censortime,
+
     censorsurv = c(
       apply(
         as.array(
@@ -160,32 +168,38 @@ ldt <- function(db, L = .Machine$double.xmax) {
 }
 
 
-
-is_xz_combination <- function(db, x, z) {
-  (db[["X"]] == x & db[["R"]] == 0) |
-  (db[["X"]] == x & db[["R"]] == 1 & db[["Z"]] == z)
-}
-
-
-n_record_combination <- function(db, x, z) {
-  sum(is_xz_combination(db = db, x = x, z = z))
-}
-
-
-compute_records <- function(db) {
+get_xz_combs <- function(db) {
   list(x = unique(db[["X"]]), z = unique(db[["Z"]])) |>
     purrr::cross_df() |>
-    dplyr::arrange(.data[["x"]], .data[["z"]]) |>
-    purrr::pmap_int(n_record_combination, db = db)
+    dplyr::arrange(.data[["x"]], .data[["z"]])
 }
 
-n_event_combination <- function(db, x, z) {
-  sum(db$delta[is_xz_combination(db = db, x = x, z = z)])
+
+are_xz <- function(db, x, z, censored = FALSE) {
+  are_x <- db[["X"]] == x
+  are_z <- db[["Z"]] == z
+
+  if (censored) {
+    are_x <- are_x & db[["delta"]] == 0
+  }
+
+  (are_x & db[["R"]] == 0) | (are_x & db[["R"]] == 1 & are_z)
 }
 
-compute_events <- function(db) {
-  list(x = unique(db[["X"]]), z = unique(db[["Z"]])) |>
-    purrr::cross_df() |>
-    dplyr::arrange(.data[["x"]], .data[["z"]]) |>
-    purrr::pmap_dbl(n_event_combination, db = db)
+
+xz_n_record <- function(db, x, z) {
+  sum(are_xz(db = db, x = x, z = z))
+}
+
+
+xz_n_event <- function(db, x, z) {
+  sum(db$delta[are_xz(db = db, x = x, z = z)])
+}
+
+xz_censortimes <- function(db, x, z) {
+  db[["U"]][are_xz(db = db, x = x, z = z, censored = TRUE)]
+}
+
+xz_dtr_label <- function(x, z) {
+  glue::glue("A{x + 1}B{z + 1}")
 }
