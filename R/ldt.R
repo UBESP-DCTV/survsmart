@@ -136,16 +136,22 @@ fit_ldt <- function(pdata, t, L) {
     }
   }
 
+  k_nonzero <- K != 0
+  delta_k_nonzero <- delta[k_nonzero]
+  q1_k_nonzero <- Q1[k_nonzero]
+  q2_k_nonzero <- Q2[k_nonzero]
+  kk_nonzero <- K[k_nonzero]
+
   w1 <- rep(0, n)
   w2 <- rep(0, n)
-  w1[K != 0] <- delta[K != 0] * Q1[K != 0] / K[K != 0]
-  w2[K != 0] <- delta[K != 0] * Q2[K != 0] / K[K != 0]
+  w1[k_nonzero] <- delta_k_nonzero * q1_k_nonzero / kk_nonzero
+  w2[k_nonzero] <- delta_k_nonzero * q2_k_nonzero / kk_nonzero
 
   s <- rep(0, n)
   for (i in seq_len(n)) {
     sind <- as.numeric(U <= U[i])
-    s[i] <- 1 - sum(delta[K != 0] * sind[K != 0] / K[K != 0]) /
-      sum(delta[K != 0] / K[K != 0])
+    s[i] <- 1 - sum(delta_k_nonzero * sind[k_nonzero] / kk_nonzero) /
+      sum(delta_k_nonzero / kk_nonzero)
   }
 
   SURV1 <- rep(NA, length(t))
@@ -166,86 +172,86 @@ fit_ldt <- function(pdata, t, L) {
       pind <- as.numeric(U >= U[k])
       if (s[k] != 0) {
         G1[k] <- sum(
-          delta[K != 0] *
-          Q1[K != 0] *
-          (ind[K != 0] - 1 + SURV1[j]) *
-          pind[K != 0] /
-          K[K != 0]
+          delta_k_nonzero *
+          q1_k_nonzero *
+          (ind[k_nonzero] - 1 + SURV1[j]) *
+          pind[k_nonzero] /
+          kk_nonzero
         ) / (n * s[k])
       }
       if (s[k] != 0) {
         G2[k] <- sum(
-          delta[K != 0] *
-          Q2[K !=  0] *
-          (ind[K != 0] - 1 + SURV2[j]) *
-          pind[K != 0] /
-          K[K != 0]
+          delta_k_nonzero *
+          q2_k_nonzero *
+          (ind[k_nonzero] - 1 + SURV2[j]) *
+          pind[k_nonzero] /
+          kk_nonzero
         ) / (n * s[k])
       }
       E1[k] <- sum(
-        delta[K != 0] *
-        (Q1[K != 0] * (ind[K != 0] - 1 + SURV1[j]) - G1[k])^2 *
-        pind[K != 0] /
-        K[K != 0]
+        delta_k_nonzero *
+        (q1_k_nonzero * (ind[k_nonzero] - 1 + SURV1[j]) - G1[k])^2 *
+        pind[k_nonzero] /
+        kk_nonzero
       ) / n
       E2[k] <- sum(
-        delta[K != 0] *
-        (Q2[K != 0] * (ind[K != 0] - 1 + SURV2[j]) - G2[k])^2 *
-        pind[K != 0] /
-        K[K != 0]
+        delta_k_nonzero *
+        (q2_k_nonzero * (ind[k_nonzero] - 1 + SURV2[j]) - G2[k])^2 *
+        pind[k_nonzero] /
+        kk_nonzero
       ) / n
       E12[k] <- sum(
-        delta[K != 0] *
-        (Q1[K != 0] * (ind[K != 0] - 1 + SURV1[j]) - G1[k]) *
-        (Q2[K != 0] * (ind[K != 0] - 1 + SURV2[j]) - G2[k]) *
-        pind[K != 0] /
-        K[K != 0]
+        delta_k_nonzero *
+        (q1_k_nonzero * (ind[k_nonzero] - 1 + SURV1[j]) - G1[k]) *
+        (q2_k_nonzero * (ind[k_nonzero] - 1 + SURV2[j]) - G2[k]) *
+        pind[k_nonzero] /
+        kk_nonzero
       ) / n
       Y[k] <- sum(pind)
     }
 
     v1 <- sum(
-        delta[K != 0] *
-        Q1[K != 0]^2 *
-        (ind[K != 0] - 1 + SURV1[j])^2 /
-        K[K != 0]
+        delta_k_nonzero *
+        q1_k_nonzero^2 *
+        (ind[k_nonzero] - 1 + SURV1[j])^2 /
+        kk_nonzero
       ) /
       (n^2) +
       sum(
-        E1[K != 0] *
-        (1 - delta[K != 0]) *
-        (U[K != 0] <= L) /
-        (K[K != 0] * Y[K != 0])
+        E1[k_nonzero] *
+        (1 - delta_k_nonzero) *
+        (U[k_nonzero] <= L) /
+        (kk_nonzero * Y[k_nonzero])
       ) / n
     SE1[j] <- sqrt(v1)
     v2 <- sum(
-        delta[K != 0] *
-        Q2[K != 0]^2 *
-        (ind[K != 0] - 1 + SURV2[j])^2 /
-        K[K != 0]
+        delta_k_nonzero *
+        q2_k_nonzero^2 *
+        (ind[k_nonzero] - 1 + SURV2[j])^2 /
+        kk_nonzero
       ) /
       (n^2) +
       sum(
-        E2[K != 0] *
-        (1 - delta[K != 0]) *
-        (U[K != 0] <= L) /
-        (K[K != 0] * Y[K != 0])
+        E2[k_nonzero] *
+        (1 - delta_k_nonzero) *
+        (U[k_nonzero] <= L) /
+        (kk_nonzero * Y[k_nonzero])
       ) / n
     SE2[j] <- sqrt(v2)
     COV12[j] <- sum(
-        delta[K != 0] *
-        Q1[K != 0] *
-        Q2[K != 0] *
-        (ind[K != 0] - 1 + SURV1[j]) *
-        (ind[K != 0] - 1 + SURV2[j]) /
+        delta_k_nonzero *
+        q1_k_nonzero *
+        q2_k_nonzero *
+        (ind[k_nonzero] - 1 + SURV1[j]) *
+        (ind[k_nonzero] - 1 + SURV2[j]) /
         K[K !=  0]
       ) /
       (n^2) +
       sum(
-        E12[K != 0] *
+        E12[k_nonzero] *
           (1 - delta[K !=  0]) *
-          (U[K != 0] <= L) /
-          (K[K != 0] * Y[K != 0])
+          (U[k_nonzero] <= L) /
+          (kk_nonzero * Y[k_nonzero])
       ) / n
   }
 
