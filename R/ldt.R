@@ -9,8 +9,8 @@ ldt <- function(db, L = .Machine$double.xmax) {
                      x))
   })
   n.event <- apply(as.array(t), 1, function(x) {
-    length(which(db$U ==
-                   x & db$delta == 1))
+    sum(db$U ==
+                   x & db$delta == 1)
   })
   cat("Estimating for A1 arm... \n")
   est1 <- DTR::sub.LDTestimate(pdata = db[db$X == 0, ], t, L)
@@ -21,12 +21,12 @@ ldt <- function(db, L = .Machine$double.xmax) {
   results <- list(
     Call = match.call(), DTR = c("A1B1", "A1B2", "A2B1", "A2B2", "A3B1", "A3B2"),
     records = c(
-      length(which((db$X == 0 & db$R == 0) | (db$X == 0 & db$R == 1 & db$Z == 0))),
-      length(which((db$X == 0 & db$R == 0) | (db$X == 0 & db$R == 1 & db$Z == 1))),
-      length(which((db$X == 1 & db$R == 0) | (db$X == 1 & db$R == 1 & db$Z == 0))),
-      length(which((db$X == 1 & db$R == 0) | (db$X == 1 & db$R == 1 & db$Z == 1))),
-      length(which((db$X == 2 & db$R == 0) | (db$X == 2 & db$R == 1 & db$Z == 0))),
-      length(which((db$X == 2 & db$R == 0) | (db$X == 2 & db$R == 1 & db$Z == 1)))
+      sum((db$X == 0 & db$R == 0) | (db$X == 0 & db$R == 1 & db$Z == 0)),
+      sum((db$X == 0 & db$R == 0) | (db$X == 0 & db$R == 1 & db$Z == 1)),
+      sum((db$X == 1 & db$R == 0) | (db$X == 1 & db$R == 1 & db$Z == 0)),
+      sum((db$X == 1 & db$R == 0) | (db$X == 1 & db$R == 1 & db$Z == 1)),
+      sum((db$X == 2 & db$R == 0) | (db$X == 2 & db$R == 1 & db$Z == 0)),
+      sum((db$X == 2 & db$R == 0) | (db$X == 2 & db$R == 1 & db$Z == 1))
     ),
     events = c(
       sum(db$delta[(db$X == 0 & db$R == 0) | (db$X == 0 & db$R == 1 & db$Z == 0)]),
@@ -37,12 +37,12 @@ ldt <- function(db, L = .Machine$double.xmax) {
       sum(db$delta[(db$X == 2 & db$R == 0) | (db$X == 2 & db$R == 1 & db$Z == 1)])
     ),
     censorDTR = c(
-      rep("A1B1", length(which((db$X == 0 & db$R == 1 & db$Z == 0 & db$delta == 0) | (db$X == 0 & db$R == 0 & db$delta == 0)))),
-      rep("A1B2", length(which((db$X == 0 & db$R == 1 & db$Z == 1 & db$delta == 0) | (db$X == 0 & db$R == 0 & db$delta == 0)))),
-      rep("A2B1", length(which((db$X == 1 & db$R == 1 & db$Z == 0 & db$delta == 0) | (db$X == 1 & db$R == 0 & db$delta == 0)))),
-      rep("A2B2", length(which((db$X == 1 & db$R == 1 & db$Z == 1 & db$delta == 0) | (db$X == 1 & db$R == 0 & db$delta == 0)))),
-      rep("A3B1", length(which((db$X == 2 & db$R == 1 & db$Z == 0 & db$delta == 0) | (db$X == 2 & db$R == 0 & db$delta == 0)))),
-      rep("A3B2", length(which((db$X == 2 & db$R == 1 & db$Z == 1 & db$delta == 0) | (db$X == 2 & db$R == 0 & db$delta == 0))))
+      rep("A1B1", sum((db$X == 0 & db$R == 1 & db$Z == 0 & db$delta == 0) | (db$X == 0 & db$R == 0 & db$delta == 0))),
+      rep("A1B2", sum((db$X == 0 & db$R == 1 & db$Z == 1 & db$delta == 0) | (db$X == 0 & db$R == 0 & db$delta == 0))),
+      rep("A2B1", sum((db$X == 1 & db$R == 1 & db$Z == 0 & db$delta == 0) | (db$X == 1 & db$R == 0 & db$delta == 0))),
+      rep("A2B2", sum((db$X == 1 & db$R == 1 & db$Z == 1 & db$delta == 0) | (db$X == 1 & db$R == 0 & db$delta == 0))),
+      rep("A3B1", sum((db$X == 2 & db$R == 1 & db$Z == 0 & db$delta == 0) | (db$X == 2 & db$R == 0 & db$delta == 0))),
+      rep("A3B2", sum((db$X == 2 & db$R == 1 & db$Z == 1 & db$delta == 0) | (db$X == 2 & db$R == 0 & db$delta == 0)))
     ),
     censortime = c(
       db$U[(db$X == 0 & db$R == 1 & db$Z == 0 & db$delta == 0) | (db$X == 0 & db$R == 0 & db$delta == 0)],
