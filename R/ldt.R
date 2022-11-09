@@ -14,6 +14,8 @@ ldt <- function(db, L = .Machine$double.xmax) {
   })
 
   xz_combs <- get_xz_combs(db)
+
+
   est <- unique(xz_combs[["x"]]) |>
     purrr::set_names() |>
     purrr::map(~{
@@ -101,19 +103,18 @@ xz_dtr_labels <- function(db, x, z, censored = FALSE) {
 }
 
 eval_censorsurv <- function(est, db, x, z) {
-  est_xt <- est[[as.character(x)]]$t
+  est_x <- est[[as.character(x)]]
+  est_xt <- est_x$t
+  est_xz <- est_x[[glue::glue("SURV{z + 1}")]]
 
-  apply(
-    as.array(xz_censortimes(db, x, z)),
-    1,
-    function(.x) {
+  xz_censortimes(db, x, z) |>
+    purrr::map(~{
+      delta <- abs(est_xt - .x)
       if (.x < min(est_xt)) {
         1
       } else {
-        est[[as.character(x)]][[glue::glue("SURV{z + 1}")]][
-          abs(est_xt - .x) == min(abs(est_xt - .x)[est_xt <= .x])
-        ]
+        # can return more than one (identical?) values!!
+        est_xz[delta == min(delta[est_xt <= .x])]
       }
-    }
-  )
+    })
 }
