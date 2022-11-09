@@ -23,14 +23,18 @@ ldt <- function(db, L = .Machine$double.xmax) {
       res
     })
 
-  dtr          <- purrr::pmap_chr(xz_combs, xz_dtr_labels, db = db)
-  records      <- purrr::pmap_int(xz_combs, xz_n_record, db = db)
-  events       <- purrr::pmap_dbl(xz_combs, xz_n_event, db = db)
-  censortime   <- purrr::pmap(xz_combs, xz_censortimes, db = db) |>
+  dtr <- purrr::pmap_chr(xz_combs, xz_dtr_labels, db = db)
+  records <- purrr::pmap_int(xz_combs, xz_n_record, db = db)
+  events <- purrr::pmap_dbl(xz_combs, xz_n_event, db = db)
+  censortime <- purrr::pmap(xz_combs, xz_censortimes, db = db) |>
     unlist()
   dtr_censored <- xz_combs |>
     purrr::pmap(xz_dtr_labels, db = db, censored = TRUE) |>
     unlist()
+  censorsurv <- xz_combs |>
+    purrr::pmap(eval_censorsurv, est = est, db = db) |>
+    purrr::flatten() # two identical results are returned together
+
 
   results <- list(
     Call = match.call(),
@@ -39,85 +43,12 @@ ldt <- function(db, L = .Machine$double.xmax) {
     events = events,
     censorDTR = dtr_censored,
     censortime = censortime,
+    censorsurv = censorsurv,
 
-    censorsurv = c(
-      apply(
-        as.array(xz_censortimes(db, 0, 0)),
-        1,
-        function(x) {
-          if (x < min(est[["0"]]$t)) {
-            1
-          } else {
-            est[["0"]]$SURV1[
-              abs(est[["0"]]$t - x) == min(abs(est[["0"]]$t - x)[est[["0"]]$t <= x])
-            ]
-          }
-        }
-      ),
-      apply(
-        as.array(xz_censortimes(db, 0, 1)),
-        1,
-        function(x) {
-          if (x < min(est[["0"]]$t)) {
-            1
-          } else {
-            est[["0"]]$SURV2[
-              abs(est[["0"]]$t - x) == min(abs(est[["0"]]$t - x)[est[["0"]]$t <= x])
-            ]
-          }
-        }
-      ),
-      apply(
-        as.array(xz_censortimes(db, 1, 0)),
-        1,
-        function(x) {
-          if (x < min(est[["1"]]$t)) {
-            1
-          } else {
-            est[["1"]]$SURV1[
-              abs(est[["1"]]$t - x) == min(abs(est[["1"]]$t - x)[est[["1"]]$t <= x])
-            ]
-          }
-        }
-      ),
-      apply(
-        as.array(xz_censortimes(db, 1, 1)),
-        1,
-        function(x) {
-          if (x < min(est[["1"]]$t)) {
-            1
-          } else {
-            est[["1"]]$SURV2[abs(est[["1"]]$t - x) == min(abs(est[["1"]]$t - x)[est[["1"]]$t <= x])]
-          }
-        }
-      ),
-      apply(
-        as.array(xz_censortimes(db, 2, 0)),
-        1,
-        function(x) {
-          if (x < min(est[["2"]]$t)) {
-            1
-          } else {
-            est[["2"]]$SURV1[abs(est[["2"]]$t - x) == min(abs(est[["2"]]$t - x)[est[["2"]]$t <= x])]
-          }
-        }
-      ),
-      apply(
-        as.array(xz_censortimes(db, 2, 1)),
-        1,
-        function(x) {
-          if (x < min(est[["2"]]$t)) {
-            1
-          } else {
-            est[["2"]]$SURV2[abs(est[["2"]]$t - x) == min(abs(est[["2"]]$t - x)[est[["2"]]$t <= x])]
-          }
-        }
-      )
-    ),
     time = t, n.risk = n.risk, n.event = n.event,
-    SURV11 = est[["0"]]$SURV1, SURV12 = est[["0"]]$SURV2,
-    SURV21 = est[["1"]]$SURV1, SURV22 = est[["1"]]$SURV2,
-    SURV31 = est[["2"]]$SURV1, SURV32 = est[["2"]]$SURV2,
+    SURV11 = est[["0"]][["SURV1"]], SURV12 = est[["0"]][["SURV2"]],
+    SURV21 = est[["1"]][["SURV1"]], SURV22 = est[["1"]][["SURV2"]],
+    SURV31 = est[["2"]][["SURV1"]], SURV32 = est[["2"]][["SURV2"]],
     SE11 = est[["0"]]$SE1, SE12 = est[["0"]]$SE2, COV1112 = est[["0"]]$COV12,
     SE21 = est[["1"]]$SE1, SE22 = est[["1"]]$SE2, COV2122 = est[["1"]]$COV12,
     SE31 = est[["2"]]$SE1, SE32 = est[["2"]]$SE2, COV3132 = est[["2"]]$COV12
@@ -167,4 +98,22 @@ xz_dtr_labels <- function(db, x, z, censored = FALSE) {
     label <- rep(label, sum(are_xz(db, x, z, censored)))
   }
   label
+}
+
+eval_censorsurv <- function(est, db, x, z) {
+  est_xt <- est[[as.character(x)]]$t
+
+  apply(
+    as.array(xz_censortimes(db, x, z)),
+    1,
+    function(.x) {
+      if (.x < min(est_xt)) {
+        1
+      } else {
+        est[[as.character(x)]][[glue::glue("SURV{z + 1}")]][
+          abs(est_xt - .x) == min(abs(est_xt - .x)[est_xt <= .x])
+        ]
+      }
+    }
+  )
 }
