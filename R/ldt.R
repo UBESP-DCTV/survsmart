@@ -23,19 +23,9 @@ ldt <- function(db, L = .Machine$double.xmax) {
     Call = match.call(),
     DTR = c("A1B1", "A1B2", "A2B1", "A2B2", "A3B1", "A3B2"),
     records = compute_records(db),
+    events = compute_events(db),
 
 
-
-
-
-    events = c(
-      sum(db$delta[(db$X == 0 & db$R == 0) | (db$X == 0 & db$R == 1 & db$Z == 0)]),
-      sum(db$delta[(db$X == 0 & db$R == 0) | (db$X == 0 & db$R == 1 & db$Z == 1)]),
-      sum(db$delta[(db$X == 1 & db$R == 0) | (db$X == 1 & db$R == 1 & db$Z == 0)]),
-      sum(db$delta[(db$X == 1 & db$R == 0) | (db$X == 1 & db$R == 1 & db$Z == 1)]),
-      sum(db$delta[(db$X == 2 & db$R == 0) | (db$X == 2 & db$R == 1 & db$Z == 0)]),
-      sum(db$delta[(db$X == 2 & db$R == 0) | (db$X == 2 & db$R == 1 & db$Z == 1)])
-    ),
     censorDTR = c(
       rep("A1B1", sum((db$X == 0 & db$R == 1 & db$Z == 0 & db$delta == 0) | (db$X == 0 & db$R == 0 & db$delta == 0))),
       rep("A1B2", sum((db$X == 0 & db$R == 1 & db$Z == 1 & db$delta == 0) | (db$X == 0 & db$R == 0 & db$delta == 0))),
@@ -171,12 +161,14 @@ ldt <- function(db, L = .Machine$double.xmax) {
 
 
 
+is_xz_combination <- function(db, x, z) {
+  (db[["X"]] == x & db[["R"]] == 0) |
+  (db[["X"]] == x & db[["R"]] == 1 & db[["Z"]] == z)
+}
 
-compute_record <- function(db, x, z) {
-  sum(
-    (db[["X"]] == x & db[["R"]] == 0) |
-    (db[["X"]] == x & db[["R"]] == 1 & db[["Z"]] == z)
-  )
+
+n_record_combination <- function(db, x, z) {
+  sum(is_xz_combination(db = db, x = x, z = z))
 }
 
 
@@ -184,5 +176,16 @@ compute_records <- function(db) {
   list(x = unique(db[["X"]]), z = unique(db[["Z"]])) |>
     purrr::cross_df() |>
     dplyr::arrange(.data[["x"]], .data[["z"]]) |>
-    purrr::pmap_int(compute_record, db = db)
+    purrr::pmap_int(n_record_combination, db = db)
+}
+
+n_event_combination <- function(db, x, z) {
+  sum(db$delta[is_xz_combination(db = db, x = x, z = z)])
+}
+
+compute_events <- function(db) {
+  list(x = unique(db[["X"]]), z = unique(db[["Z"]])) |>
+    purrr::cross_df() |>
+    dplyr::arrange(.data[["x"]], .data[["z"]]) |>
+    purrr::pmap_dbl(n_event_combination, db = db)
 }
