@@ -129,10 +129,10 @@ fit_ldt <- function(pdata, t, L) {
   K <- rep(0, n)
   for (i in seq_len(n)) {
     if (round(U[i], 4) < round(min(cfit$time), 4)) {
-      K[i] <- 1
+      K[[i]] <- 1
     } else {
       dt <- round(cfit$time, 4) - round(U[i], 4)
-      K[i] <- cfit$surv[which(dt == max(dt[dt <= 0]))[1]]
+      K[[i]] <- cfit$surv[which.max(dt[dt <= 0])]
     }
   }
 
