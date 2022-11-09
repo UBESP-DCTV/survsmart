@@ -19,20 +19,13 @@ ldt <- function(db, L = .Machine$double.xmax) {
   cat("Estimating for A3 arm... \n")
   est3 <- DTR::sub.LDTestimate(pdata = db[db$X == 2, ], t, L)
 
-  dtr <- get_xz_combs(db) |>
-    purrr::pmap_chr(xz_dtr_labels, db = db)
-
-  records <- get_xz_combs(db) |>
-    purrr::pmap_int(xz_n_record, db = db)
-
-  events <- get_xz_combs(db) |>
-    purrr::pmap_dbl(xz_n_event, db = db)
-
-  censortime <- get_xz_combs(db) |>
-    purrr::pmap(xz_censortimes, db = db) |>
+  xz_combs <- get_xz_combs(db)
+  dtr          <- purrr::pmap_chr(xz_combs, xz_dtr_labels, db = db)
+  records      <- purrr::pmap_int(xz_combs, xz_n_record, db = db)
+  events       <- purrr::pmap_dbl(xz_combs, xz_n_event, db = db)
+  censortime   <- purrr::pmap(xz_combs, xz_censortimes, db = db) |>
     unlist()
-
-  dtr_censored <- get_xz_combs(db) |>
+  dtr_censored <- xz_combs |>
     purrr::pmap(xz_dtr_labels, db = db, censored = TRUE) |>
     unlist()
 
@@ -46,12 +39,7 @@ ldt <- function(db, L = .Machine$double.xmax) {
 
     censorsurv = c(
       apply(
-        as.array(
-          db$U[
-            (db$X == 0 & db$R == 1 & db$Z == 0 & db$delta == 0) |
-            (db$X == 0 & db$R == 0 & db$delta == 0)
-          ]
-        ),
+        as.array(xz_censortimes(db, 0, 0)),
         1,
         function(x) {
           if (x < min(est1$t)) {
@@ -64,12 +52,7 @@ ldt <- function(db, L = .Machine$double.xmax) {
         }
       ),
       apply(
-        as.array(
-          db$U[
-            (db$X == 0 & db$R == 1 & db$Z == 1 & db$delta == 0) |
-            (db$X == 0 & db$R == 0 & db$delta == 0)
-          ]
-        ),
+        as.array(xz_censortimes(db, 0, 1)),
         1,
         function(x) {
           if (x < min(est1$t)) {
@@ -82,12 +65,7 @@ ldt <- function(db, L = .Machine$double.xmax) {
         }
       ),
       apply(
-        as.array(
-          db$U[
-            (db$X == 1 & db$R == 1 & db$Z == 0 & db$delta == 0) |
-            (db$X == 1 & db$R == 0 & db$delta == 0)
-          ]
-        ),
+        as.array(xz_censortimes(db, 1, 0)),
         1,
         function(x) {
           if (x < min(est2$t)) {
@@ -100,12 +78,7 @@ ldt <- function(db, L = .Machine$double.xmax) {
         }
       ),
       apply(
-        as.array(
-          db$U[
-            (db$X == 1 & db$R == 1 & db$Z == 1 & db$delta == 0) |
-            (db$X == 1 & db$R == 0 & db$delta == 0)
-          ]
-        ),
+        as.array(xz_censortimes(db, 1, 1)),
         1,
         function(x) {
           if (x < min(est2$t)) {
@@ -116,12 +89,7 @@ ldt <- function(db, L = .Machine$double.xmax) {
         }
       ),
       apply(
-        as.array(
-          db$U[
-            (db$X == 2 & db$R == 1 & db$Z == 0 & db$delta == 0) |
-            (db$X == 2 & db$R == 0 & db$delta == 0)
-          ]
-        ),
+        as.array(xz_censortimes(db, 2, 0)),
         1,
         function(x) {
           if (x < min(est3$t)) {
@@ -132,12 +100,7 @@ ldt <- function(db, L = .Machine$double.xmax) {
         }
       ),
       apply(
-        as.array(
-          db$U[
-            (db$X == 2 & db$R == 1 & db$Z == 1 & db$delta == 0) |
-            (db$X == 2 & db$R == 0 & db$delta == 0)
-          ]
-        ),
+        as.array(xz_censortimes(db, 2, 1)),
         1,
         function(x) {
           if (x < min(est3$t)) {
