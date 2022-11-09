@@ -13,9 +13,6 @@ test_that("ldt throws correct errors", {
   # setup
   db <- db_dtr2
 
-  # eval
-
-
   # test
   expect_error(ldt(db, -1), "> 0")
   expect_error(ldt(db, "2"), "numeric")
