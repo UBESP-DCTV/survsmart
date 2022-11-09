@@ -1,13 +1,17 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-# survsmart
+# survsmart [![](https://img.shields.io/badge/WEBsite-click--me-orange.svg)](http://UBESP-DCTV/survsmart/)
 
 <!-- badges: start -->
 
 [![R-CMD-check](https://github.com/UBESP-DCTV/survsmart/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/UBESP-DCTV/survsmart/actions/workflows/R-CMD-check.yaml)
+[![covr](https://github.com/UBESP-DCTV/survsmart/actions/workflows/covr.yaml/badge.svg)](https://github.com/UBESP-DCTV/survsmart/actions/workflows/covr.yaml)
+[![lint](https://github.com/UBESP-DCTV/survsmart/actions/workflows/lint.yaml/badge.svg)](https://github.com/UBESP-DCTV/survsmart/actions/workflows/lint.yaml)
 [![Lifecycle:
 experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
+[![CRAN
+status](https://www.r-pkg.org/badges/version/survsmart)](https://CRAN.R-project.org/package=survsmart)
 <!-- badges: end -->
 
 The goal of survsmart is to …

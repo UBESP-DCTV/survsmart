@@ -1,17 +1,25 @@
 Package: survsmart
 Title: What the Package Does (One Line, Title Case)
 Version: 0.0.0.9000
-Authors@R: 
-    person("Corrado", "Lanera", , "corrado.lanera@gmail.com", role = c("aut", "cre", "cph"),
-           comment = c(ORCID = "0000-0002-0520-7428"))
+Authors@R: c(
+    person("Corrado", "Lanera", , "corrado.lanera@ubep.unipd.it", role = c("aut", "cre", "cph"),
+           comment = c(ORCID = "0000-0002-0520-7428")),
+    person("Giulia", "Lorenzoni", , "giulia.lorenzoni@unipd.it", role = c("aut", "cph"),
+           comment = c(ORCID = "0000-0003-1771-4686"))
+  )
 Description: What the package does (one paragraph).
 License: MIT + file LICENSE
+URL: https://ubesp-dctv.github.io/survsmart/
+Suggests: 
+    checkmate,
+    covr,
+    devtools,
+    lintr,
+    spelling,
+    testthat (>= 3.0.0),
+    usethis
+Config/testthat/edition: 3
 Encoding: UTF-8
+Language: en-US
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.2.1
-Suggests: 
-    spelling,
-    testthat (>= 3.0.0)
-Config/testthat/edition: 3
-Language: en-US
-URL: https://ubesp-dctv.github.io/survsmart/
