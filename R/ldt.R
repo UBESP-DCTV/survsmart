@@ -126,15 +126,14 @@ fit_ldt <- function(pdata, t, L) {
 
   cfit <- summary(survival::survfit(survival::Surv(U, cens) ~ 1))
 
-  K <- rep(0, n)
-  for (i in seq_len(n)) {
-    if (round(U[i], 4) < round(min(cfit$time), 4)) {
-      K[[i]] <- 1
-    } else {
-      dt <- round(cfit$time, 4) - round(U[i], 4)
-      K[[i]] <- cfit$surv[which.max(dt[dt <= 0])]
-    }
-  }
+  K <- purrr::map_dbl(U, ~{
+      if (round(.x, 4) < round(min(cfit$time), 4)) {
+        1
+      } else {
+        dt <- round(cfit$time, 4) - round(.x, 4)
+        cfit$surv[which.max(dt[dt <= 0])]
+      }
+    })
 
   k_nonzero <- K != 0
   delta_k_nonzero <- delta[k_nonzero]
@@ -147,12 +146,12 @@ fit_ldt <- function(pdata, t, L) {
   w1[k_nonzero] <- delta_k_nonzero * q1_k_nonzero / kk_nonzero
   w2[k_nonzero] <- delta_k_nonzero * q2_k_nonzero / kk_nonzero
 
-  s <- rep(0, n)
-  for (i in seq_len(n)) {
-    sind <- as.numeric(U <= U[i])
-    s[[i]] <- 1 - sum(delta_k_nonzero * sind[k_nonzero] / kk_nonzero) /
+  s <- purrr::map_dbl(U, ~ {
+    sind <- as.numeric(U <= .x)
+    1 -
+      sum(delta_k_nonzero * sind[k_nonzero] / kk_nonzero) /
       sum(delta_k_nonzero / kk_nonzero)
-  }
+  })
 
   SURV1 <- rep(NA_real_, length(t))
   SURV2 <- rep(NA_real_, length(t))
@@ -164,6 +163,7 @@ fit_ldt <- function(pdata, t, L) {
     ind <- as.numeric(U <= t[j])
     SURV1[[j]] <- 1 - sum(w1 * ind) / sum(w1)
     SURV2[[j]] <- 1 - sum(w2 * ind) / sum(w2)
+
     G1 <- rep(0, n)
     G2 <- rep(0, n)
     E1 <- rep(0, n)
@@ -173,6 +173,7 @@ fit_ldt <- function(pdata, t, L) {
 
     for (k in seq_len(n)) {
       pind <- as.numeric(U >= U[k])
+
       if (s[k] != 0) {
         G1[[k]] <- sum(
           delta_k_nonzero *
@@ -182,6 +183,7 @@ fit_ldt <- function(pdata, t, L) {
           kk_nonzero
         ) / (n * s[k])
       }
+
       if (s[k] != 0) {
         G2[[k]] <- sum(
           delta_k_nonzero *
@@ -191,18 +193,21 @@ fit_ldt <- function(pdata, t, L) {
           kk_nonzero
         ) / (n * s[k])
       }
+
       E1[[k]] <- sum(
         delta_k_nonzero *
         (q1_k_nonzero * (ind[k_nonzero] - 1 + SURV1[j]) - G1[k])^2 *
         pind[k_nonzero] /
         kk_nonzero
       ) / n
+
       E2[[k]] <- sum(
         delta_k_nonzero *
         (q2_k_nonzero * (ind[k_nonzero] - 1 + SURV2[j]) - G2[k])^2 *
         pind[k_nonzero] /
         kk_nonzero
       ) / n
+
       E12[[k]] <- sum(
         delta_k_nonzero *
         (q1_k_nonzero * (ind[k_nonzero] - 1 + SURV1[j]) - G1[k]) *
@@ -210,6 +215,7 @@ fit_ldt <- function(pdata, t, L) {
         pind[k_nonzero] /
         kk_nonzero
       ) / n
+
       Y[[k]] <- sum(pind)
     }
 
@@ -226,7 +232,9 @@ fit_ldt <- function(pdata, t, L) {
         (U[k_nonzero] <= L) /
         (kk_nonzero * Y[k_nonzero])
       ) / n
+
     SE1[[j]] <- sqrt(v1)
+
     v2 <- sum(
         delta_k_nonzero *
         q2_k_nonzero^2 *
@@ -240,7 +248,9 @@ fit_ldt <- function(pdata, t, L) {
         (U[k_nonzero] <= L) /
         (kk_nonzero * Y[k_nonzero])
       ) / n
+
     SE2[[j]] <- sqrt(v2)
+
     COV12[[j]] <- sum(
         delta_k_nonzero *
         q1_k_nonzero *
