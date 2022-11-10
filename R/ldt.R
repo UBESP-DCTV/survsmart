@@ -105,7 +105,6 @@ eval_censorsurv <- function(est, db, x, z) {
 ldt_x <- function(db, x, t, L) {
   pdata <- dplyr::filter(db, .data[["X"]] == x)
 
-  usethis::ui_todo("Estimating LDT for A{x + 1} arm...")
   res <- fit_ldt(pdata = pdata, t, L)
   usethis::ui_done("LDT for A{x + 1} arm estimated.")
   res
@@ -140,17 +139,18 @@ fit_ldt <- function(pdata, t, L) {
   q1_k_nonzero <- Q1[k_nonzero]
   q2_k_nonzero <- Q2[k_nonzero]
   kk_nonzero <- K[k_nonzero]
+  delta_kk_nonzero <- delta_k_nonzero / kk_nonzero
 
   w1 <- rep(0, n)
   w2 <- rep(0, n)
-  w1[k_nonzero] <- delta_k_nonzero * q1_k_nonzero / kk_nonzero
-  w2[k_nonzero] <- delta_k_nonzero * q2_k_nonzero / kk_nonzero
+  w1[k_nonzero] <- delta_kk_nonzero * q1_k_nonzero
+  w2[k_nonzero] <- delta_kk_nonzero * q2_k_nonzero
 
   s <- purrr::map_dbl(U, ~ {
     sind <- as.numeric(U <= .x)
     1 -
-      sum(delta_k_nonzero * sind[k_nonzero] / kk_nonzero) /
-      sum(delta_k_nonzero / kk_nonzero)
+      sum(delta_kk_nonzero * sind[k_nonzero]) /
+      sum(delta_kk_nonzero)
   })
 
   SURV1 <- rep(NA_real_, length(t))
@@ -161,8 +161,13 @@ fit_ldt <- function(pdata, t, L) {
 
   for (j in seq_along(t)) {
     ind <- as.numeric(U <= t[j])
+    ind_k_nonzero <- ind[k_nonzero]
+
     SURV1[[j]] <- 1 - sum(w1 * ind) / sum(w1)
     SURV2[[j]] <- 1 - sum(w2 * ind) / sum(w2)
+
+    ind_k_nonzero_plus_surv1_j_minus_1 <- (ind_k_nonzero - 1 + SURV1[j])
+    ind_k_nonzero_plus_surv2_j_minus_1 <- (ind_k_nonzero - 1 + SURV2[j])
 
     G1 <- rep(0, n)
     G2 <- rep(0, n)
@@ -173,96 +178,86 @@ fit_ldt <- function(pdata, t, L) {
 
     for (k in seq_len(n)) {
       pind <- as.numeric(U >= U[k])
+      pind_k_nonzero <- pind[k_nonzero]
+      delta_pind_k_nonzero <- delta_kk_nonzero * pind_k_nonzero / n
+
+      q1_times_ind_k_nonzero_plus_surv1_j_minus_1 <- q1_k_nonzero *
+        ind_k_nonzero_plus_surv1_j_minus_1
+      q2_times_ind_k_nonzero_plus_surv2_j_minus_1 <- q2_k_nonzero *
+        ind_k_nonzero_plus_surv2_j_minus_1
 
       if (s[k] != 0) {
+        delta_pind_k_nonzero_sk <- delta_pind_k_nonzero / s[k]
+
         G1[[k]] <- sum(
-          delta_k_nonzero *
-          q1_k_nonzero *
-          (ind[k_nonzero] - 1 + SURV1[j]) *
-          pind[k_nonzero] /
-          kk_nonzero
-        ) / (n * s[k])
-      }
+          delta_pind_k_nonzero_sk *
+            q1_times_ind_k_nonzero_plus_surv1_j_minus_1
+        )
 
-      if (s[k] != 0) {
         G2[[k]] <- sum(
-          delta_k_nonzero *
-          q2_k_nonzero *
-          (ind[k_nonzero] - 1 + SURV2[j]) *
-          pind[k_nonzero] /
-          kk_nonzero
-        ) / (n * s[k])
+          delta_pind_k_nonzero_sk *
+            q2_times_ind_k_nonzero_plus_surv2_j_minus_1
+        )
       }
 
-      E1[[k]] <- sum(
-        delta_k_nonzero *
-        (q1_k_nonzero * (ind[k_nonzero] - 1 + SURV1[j]) - G1[k])^2 *
-        pind[k_nonzero] /
-        kk_nonzero
-      ) / n
+      to_square_surv1 <- (
+        q1_times_ind_k_nonzero_plus_surv1_j_minus_1 - G1[k]
+      )
+      to_square_surv2 <- (
+        q2_times_ind_k_nonzero_plus_surv2_j_minus_1 - G2[k]
+      )
 
-      E2[[k]] <- sum(
-        delta_k_nonzero *
-        (q2_k_nonzero * (ind[k_nonzero] - 1 + SURV2[j]) - G2[k])^2 *
-        pind[k_nonzero] /
-        kk_nonzero
-      ) / n
+      E1[[k]] <- sum(delta_pind_k_nonzero * to_square_surv1^2)
+      E2[[k]] <- sum(delta_pind_k_nonzero * to_square_surv2^2)
 
       E12[[k]] <- sum(
-        delta_k_nonzero *
-        (q1_k_nonzero * (ind[k_nonzero] - 1 + SURV1[j]) - G1[k]) *
-        (q2_k_nonzero * (ind[k_nonzero] - 1 + SURV2[j]) - G2[k]) *
-        pind[k_nonzero] /
-        kk_nonzero
-      ) / n
+        delta_pind_k_nonzero * to_square_surv1 * to_square_surv2
+      )
 
       Y[[k]] <- sum(pind)
     }
 
     v1 <- sum(
-        delta_k_nonzero *
-        q1_k_nonzero^2 *
-        (ind[k_nonzero] - 1 + SURV1[j])^2 /
-        kk_nonzero
+        delta_kk_nonzero *
+          q1_k_nonzero^2 *
+          ind_k_nonzero_plus_surv1_j_minus_1^2
       ) /
       (n^2) +
       sum(
         E1[k_nonzero] *
-        (1 - delta_k_nonzero) *
-        (U[k_nonzero] <= L) /
-        (kk_nonzero * Y[k_nonzero])
+          (1 - delta_k_nonzero) *
+         (U[k_nonzero] <= L) /
+          (kk_nonzero * Y[k_nonzero])
       ) / n
 
     SE1[[j]] <- sqrt(v1)
 
     v2 <- sum(
-        delta_k_nonzero *
-        q2_k_nonzero^2 *
-        (ind[k_nonzero] - 1 + SURV2[j])^2 /
-        kk_nonzero
+        delta_kk_nonzero *
+          q2_k_nonzero^2 *
+          ind_k_nonzero_plus_surv2_j_minus_1^2
       ) /
       (n^2) +
       sum(
         E2[k_nonzero] *
-        (1 - delta_k_nonzero) *
-        (U[k_nonzero] <= L) /
-        (kk_nonzero * Y[k_nonzero])
+          (1 - delta_k_nonzero) *
+          (U[k_nonzero] <= L) /
+          (kk_nonzero * Y[k_nonzero])
       ) / n
 
     SE2[[j]] <- sqrt(v2)
 
     COV12[[j]] <- sum(
-        delta_k_nonzero *
-        q1_k_nonzero *
-        q2_k_nonzero *
-        (ind[k_nonzero] - 1 + SURV1[j]) *
-        (ind[k_nonzero] - 1 + SURV2[j]) /
-        K[K !=  0]
+        delta_kk_nonzero *
+          q1_k_nonzero *
+          q2_k_nonzero *
+          ind_k_nonzero_plus_surv1_j_minus_1 *
+          ind_k_nonzero_plus_surv2_j_minus_1
       ) /
       (n^2) +
       sum(
         E12[k_nonzero] *
-          (1 - delta[K !=  0]) *
+          (1 - delta_k_nonzero) *
           (U[k_nonzero] <= L) /
           (kk_nonzero * Y[k_nonzero])
       ) / n
