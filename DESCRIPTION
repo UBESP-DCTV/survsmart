@@ -13,6 +13,7 @@ URL: https://ubesp-dctv.github.io/survsmart/
 Imports: 
     checkmate,
     dplyr,
+    glue,
     purrr,
     rlang (>= 0.4.11),
     survival

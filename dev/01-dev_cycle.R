@@ -1,6 +1,6 @@
 
 # Use new packages ------------------------------------------------
-used_pkgs <- c("checkmate", "purrr", "dplyr", "survival")
+used_pkgs <- c("checkmate", "purrr", "dplyr", "survival", "glue")
 installed <- rownames(installed.packages())
 
 install.packages(setdiff(used_pkgs, installed), quiet = TRUE)
