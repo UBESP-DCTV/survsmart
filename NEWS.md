@@ -1,5 +1,7 @@
 # survsmart (development version)
 
+* `ldt` now correctly manage a single value of censor time if ties happened from time reference (i.e. event times) and reference (e.g. censor times).
+
 # survsmart 0.0.0.9000
 
 ## Utils

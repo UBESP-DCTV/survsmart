@@ -25,7 +25,7 @@ ldt <- function(db, L = .Machine$double.xmax) {
         unlist(),
       censorsurv = xz_combs |>
         purrr::pmap(eval_censorsurv, est = est, db = db) |>
-        purrr::flatten(), # two identical results are returned together
+        unlist(),
 
       time = t, n.risk = n.risk, n.event = n.event,
       SURV11 = est[["0"]][["SURV1"]], SURV12 = est[["0"]][["SURV2"]],
@@ -83,20 +83,17 @@ xz_dtr_labels <- function(db, x, z, censored = FALSE) {
   label
 }
 
-
 eval_censorsurv <- function(est, db, x, z) {
   est_x <- est[[as.character(x)]]
   est_xt <- est_x$t
   est_xz <- est_x[[glue::glue("SURV{z + 1}")]]
 
   xz_censortimes(db, x, z) |>
-    purrr::map(~ {
-      delta <- abs(est_xt - .x)
+    purrr::map_dbl(~ {
       if (.x < min(est_xt)) {
         1
       } else {
-        # can return more than one (identical?) values!!
-        est_xz[delta == min(delta[est_xt <= .x])]
+        est_xz[which_first_min_dist_from(est_xt, .x)]
       }
     })
 }
