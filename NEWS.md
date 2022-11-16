@@ -1,6 +1,7 @@
 # survsmart (development version)
 
-* `ldt` now correctly manage a single value of censor time if ties happened from time reference (i.e. event times) and reference (e.g. censor times).
+* `ldt` now require class code coherent with class names, i.e. arm 1 for stage 1 (X) is coded by 1 (and not 0). (fixes #5)
+* `ldt` now correctly manage a single value of censor time if ties happened from time reference (i.e. event times) and reference (e.g. censor times). (fixes #3)
 
 # survsmart 0.0.0.9000
 

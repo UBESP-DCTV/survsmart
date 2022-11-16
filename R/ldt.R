@@ -28,12 +28,12 @@ ldt <- function(db, L = .Machine$double.xmax) {
         unlist(),
 
       time = t, n.risk = n.risk, n.event = n.event,
-      SURV11 = est[["0"]][["SURV1"]], SURV12 = est[["0"]][["SURV2"]],
-      SURV21 = est[["1"]][["SURV1"]], SURV22 = est[["1"]][["SURV2"]],
-      SURV31 = est[["2"]][["SURV1"]], SURV32 = est[["2"]][["SURV2"]],
-      SE11 = est[["0"]]$SE1, SE12 = est[["0"]]$SE2, COV1112 = est[["0"]]$COV12,
-      SE21 = est[["1"]]$SE1, SE22 = est[["1"]]$SE2, COV2122 = est[["1"]]$COV12,
-      SE31 = est[["2"]]$SE1, SE32 = est[["2"]]$SE2, COV3132 = est[["2"]]$COV12
+      SURV11 = est[["1"]][["SURV1"]], SURV12 = est[["1"]][["SURV2"]],
+      SURV21 = est[["2"]][["SURV1"]], SURV22 = est[["2"]][["SURV2"]],
+      SURV31 = est[["3"]][["SURV1"]], SURV32 = est[["3"]][["SURV2"]],
+      SE11 = est[["1"]]$SE1, SE12 = est[["1"]]$SE2, COV1112 = est[["1"]]$COV12,
+      SE21 = est[["2"]]$SE1, SE22 = est[["2"]]$SE2, COV2122 = est[["2"]]$COV12,
+      SE31 = est[["3"]]$SE1, SE32 = est[["3"]]$SE2, COV3132 = est[["3"]]$COV12
     ),
     class = "DTR_gl"
   )
@@ -75,7 +75,7 @@ xz_censortimes <- function(db, x, z) {
 
 
 xz_dtr_labels <- function(db, x, z, censored = FALSE) {
-  label <- glue::glue("A{x + 1}B{z + 1}")
+  label <- glue::glue("A{x}B{z}")
 
   if (censored) {
     label <- rep(label, sum(are_xz(db, x, z, censored)))
@@ -86,7 +86,7 @@ xz_dtr_labels <- function(db, x, z, censored = FALSE) {
 eval_censorsurv <- function(est, db, x, z) {
   est_x <- est[[as.character(x)]]
   est_xt <- est_x$t
-  est_xz <- est_x[[glue::glue("SURV{z + 1}")]]
+  est_xz <- est_x[[glue::glue("SURV{z}")]]
 
   xz_censortimes(db, x, z) |>
     purrr::map_dbl(~ {
@@ -103,7 +103,7 @@ ldt_x <- function(db, x, t, L) {
   pdata <- dplyr::filter(db, .data[["X"]] == x)
 
   res <- fit_ldt(pdata = pdata, t, L)
-  usethis::ui_done("LDT for A{x + 1} arm estimated.")
+  usethis::ui_done("LDT for A{x} arm estimated.")
   res
 }
 
@@ -116,9 +116,9 @@ fit_ldt <- function(pdata, t, L) {
   delta <- pdata$delta
   cens <- 1 - delta
 
-  pi.z <- sum(R * Z) / sum(R)
-  Q1 <- (1 - R) + R * (1 - Z) / (1 - pi.z)
-  Q2 <- (1 - R) + R * Z / (pi.z)
+  pi.z <- sum(R * (Z - 1)) / sum(R)
+  Q1 <- (1 - R) + R * (2 - Z) / (1 - pi.z)
+  Q2 <- (1 - R) + R * (Z - 1) / (pi.z)
 
   cfit <- summary(survival::survfit(survival::Surv(U, cens) ~ 1))
 

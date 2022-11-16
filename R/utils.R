@@ -10,6 +10,8 @@ check_dtr_db <- function(db) {
     names(db),
     permutation.of = c("X", "R", "Z", "U", "delta")
   )
+  checkmate::qassert(db[["X"]], "x>4(0,)")
+  checkmate::qassert(db[["Z"]], "x>4(0,)")
 }
 
 which_first_min_dist_from <- function(vec, ref) {
