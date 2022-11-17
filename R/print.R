@@ -12,26 +12,27 @@ print.ldt <- function(x, ...) {
 
   x |>
     dplyr::mutate(
-      median = purrr::map(surv, ~ {
-        c(
-          t[which_first_min_dist_from(.x[["SURV1"]], 0.5)],
-          t[which_first_min_dist_from(.x[["SURV2"]], 0.5)]
-        )
-      }) |> unlist()
-      ,
-      LCL95 = purrr::map(surv, ~ {
-        c(
-          t[which_first_min_dist_from(.x[["SURV1"]] - 1.96 * .x[["SE1"]], 0.5)],
-          t[which_first_min_dist_from(.x[["SURV2"]] - 1.96 * .x[["SE2"]], 0.5)]
-        )
-      }) |> unlist(),
-      UCL95 =  purrr::map(surv, ~ {
-        c(
-          t[which_first_min_dist_from(.x[["SURV1"]] + 1.96 * .x[["SE1"]], 0.5)],
-          t[which_first_min_dist_from(.x[["SURV2"]] + 1.96 * .x[["SE2"]], 0.5)]
-        )
-      }) |> unlist()
+      median = time_at(t, surv, "median"),
+      LCL95 = time_at(t, surv, "lcl"),
+      UCL95 = time_at(t, surv, "ucl")
     ) |>
     tibble::as_tibble()
+}
 
+
+time_at <- function(t, x, what = c("median", "lcl", "ucl")) {
+  what <- match.arg(what)
+  traslation <- switch(
+    what,
+    median = 0,
+    lcl = -1,
+    ucl = 1
+  )
+
+  purrr::map(x, ~ {
+    c(
+      t[which_first_min_dist_from(.x[["SURV1"]] + traslation * 1.96 * .x[["SE1"]] , 0.5)],
+      t[which_first_min_dist_from(.x[["SURV2"]] + traslation * 1.96 * .x[["SE2"]], 0.5)]
+    )
+  }) |> unlist()
 }
