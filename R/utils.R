@@ -21,3 +21,5 @@ which_first_min_dist_from <- function(vec, ref) {
   vec[vec > ref] <- NA
   order(abs(vec - ref))[[1]]
 }
+
+`%||%` <- function(x, y) if (is.null(x)) y else x

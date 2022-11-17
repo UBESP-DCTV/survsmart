@@ -13,6 +13,8 @@ usethis::use_tidy_description()
 # Add new functions -----------------------------------------------
 .add_function("ldt")
 .add_function("utils")
+.add_function("print")
+.add_function("extractors")
 
 
 

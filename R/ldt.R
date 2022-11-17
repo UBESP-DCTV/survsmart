@@ -1,3 +1,11 @@
+#' LDT
+#'
+#' @param db (data.frame) with column `X` corresponding to
+#'   treatment arms in the first stage (X = 1 for arm A1, X = 2 for arm A2, ... X = <n> for arm A<n>), `R` for respondent or not in the first arm (R = 0 for not respondent, R = 1 for respondent), `Z` for treatment arms for the second stage (Z = 1 for first arm B1, Z = 2 for second arm B2), `U` for observed time survival (event or censoring time), `delta`event indicator (delta = 0 for censored, delta = 1 for events).
+#' @param L (dbl, .Machine$double.xmax) restricted survival time.
+#'
+#' @return (ldt) object (inherited from dtr)
+#' @export
 ldt <- function(db, L = .Machine$double.xmax) {
   check_dtr_db(db)
   checkmate::qassert(L, "N1(0,)")
@@ -12,32 +20,30 @@ ldt <- function(db, L = .Machine$double.xmax) {
     purrr::set_names() |>
     purrr::map(ldt_x, db = db, t = t, L = L)
 
-  structure(
-    list(
-      Call = match.call(),
-      DTR = purrr::pmap_chr(xz_combs, xz_dtr_labels, db = db),
-      records = purrr::pmap_int(xz_combs, xz_n_record, db = db),
-      events = purrr::pmap_dbl(xz_combs, xz_n_event, db = db),
-      censorDTR = xz_combs |>
-        purrr::pmap(xz_dtr_labels, db = db, censored = TRUE) |>
-        unlist(),
-      censortime = purrr::pmap(xz_combs, xz_censortimes, db = db) |>
-        unlist(),
-      censorsurv = xz_combs |>
-        purrr::pmap(eval_censorsurv, est = est, db = db) |>
-        unlist(),
+  map_xz_combs_to <- function(.f, ...) {
+    purrr::pmap(xz_combs, .f, db = db, ...) |> unlist()
+  }
 
-      time = t, n.risk = n.risk, n.event = n.event,
-      SURV11 = est[["1"]][["SURV1"]], SURV12 = est[["1"]][["SURV2"]],
-      SURV21 = est[["2"]][["SURV1"]], SURV22 = est[["2"]][["SURV2"]],
-      SURV31 = est[["3"]][["SURV1"]], SURV32 = est[["3"]][["SURV2"]],
-      SE11 = est[["1"]]$SE1, SE12 = est[["1"]]$SE2, COV1112 = est[["1"]]$COV12,
-      SE21 = est[["2"]]$SE1, SE22 = est[["2"]]$SE2, COV2122 = est[["2"]]$COV12,
-      SE31 = est[["3"]]$SE1, SE32 = est[["3"]]$SE2, COV3132 = est[["3"]]$COV12
+  structure(
+    tibble::tibble(
+      dtr = purrr::pmap_chr(xz_combs, xz_dtr_labels, db = db),
+      records = purrr::pmap_int(xz_combs, xz_n_record, db = db),
+      events = purrr::pmap_dbl(xz_combs, xz_n_event, db = db)
     ),
-    class = "DTR_gl"
+    call = match.call(),
+    censor = tibble::tibble(
+      dtr = map_xz_combs_to(xz_dtr_labels, censored = TRUE),
+      time = map_xz_combs_to(xz_censortimes),
+      surv = map_xz_combs_to(eval_censorsurv, est = est)
+    ),
+    risk_table = tibble::tibble(
+      time = t, n.risk = n.risk, n.event = n.event
+    ),
+    estimate = est,
+    class = c("ldt", "dtr", "tbl_df", "tbl", "data.frame")
   )
 }
+
 
 
 get_xz_combs <- function(db) {
