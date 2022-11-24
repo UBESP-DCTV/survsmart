@@ -19,6 +19,7 @@ WRSEestimate_gl <- function(data) {
   if (is.null(data$delta)) {
     stop("delta can not be empty")
   }
+
   t <- unique(data$U[which(data$delta == 1)])
   t <- t[order(t)]
   n.risk <- apply(as.array(t), 1, function(x) {
