@@ -1,10 +1,16 @@
 #' LDT
 #'
-#' @param db (data.frame) with column `X` corresponding to
-#'   treatment arms in the first stage (X = 1 for arm A1, X = 2 for arm A2, ... X = <n> for arm A<n>), `R` for respondent or not in the first arm (R = 0 for not respondent, R = 1 for respondent), `Z` for treatment arms for the second stage (Z = 1 for first arm B1, Z = 2 for second arm B2), `U` for observed time survival (event or censoring time), `delta`event indicator (delta = 0 for censored, delta = 1 for events).
+#' @param db (data.frame) with column `X` corresponding to treatment
+#'   arms in the first stage (X = 1 for arm A1, X = 2 for arm A2, ... X
+#'   = <n> for arm A<n>), `R` for respondent or not in the first arm (R
+#'   = 0 for not respondent, R = 1 for respondent), `Z` for treatment
+#'   arms for the second stage (Z = 1 for first arm B1, Z = 2 for second
+#'   arm B2), `U` for observed time survival (event or censoring time),
+#'   `delta`event indicator (delta = 0 for censored, delta = 1 for
+#'   events).
 #' @param L (dbl, .Machine$double.xmax) restricted survival time.
 #'
-#' @return (ldt) object (inherited from dtr)
+#' @return ([ldt]) object (inherited from [dtr])
 #' @export
 ldt <- function(db, L = .Machine$double.xmax) {
   check_dtr_db(db)
