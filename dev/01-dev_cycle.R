@@ -16,6 +16,7 @@ usethis::use_tidy_description()
 .add_function("print")
 .add_function("extractors")
 
+usethis::use_tibble()
 
 
 
