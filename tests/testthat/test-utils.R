@@ -1,4 +1,4 @@
-test_that("multiplication works", {
+test_that("check_dtr_db works", {
   # setup
   missing_var_db <- data.frame(
     X = 1:4,

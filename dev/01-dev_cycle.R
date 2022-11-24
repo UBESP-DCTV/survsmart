@@ -18,6 +18,7 @@ usethis::use_tidy_description()
 
 usethis::use_tibble()
 
+.add_function("wrse")
 
 
 # Quality checks --------------------------------------------------
