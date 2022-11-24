@@ -10,11 +10,19 @@ Authors@R: c(
 Description: What the package does (one paragraph).
 License: MIT + file LICENSE
 URL: https://ubesp-dctv.github.io/survsmart/
-Suggests: 
+Imports: 
     checkmate,
+    dplyr,
+    glue,
+    purrr,
+    rlang (>= 0.4.11),
+    survival,
+    tibble
+Suggests: 
     covr,
     devtools,
     lintr,
+    roxygen2,
     spelling,
     testthat (>= 3.0.0),
     usethis

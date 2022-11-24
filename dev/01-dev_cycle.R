@@ -1,16 +1,22 @@
 
 # Use new packages ------------------------------------------------
-used_pkgs <- c()
-install.packages(used_pkgs)
-lapply(used_pkgs, usethis::use_package) |> invisible()
+used_pkgs <- c("checkmate", "purrr", "dplyr", "survival", "glue")
+installed <- rownames(installed.packages())
+
+install.packages(setdiff(used_pkgs, installed), quiet = TRUE)
+purrr::walk(used_pkgs, usethis::use_package)
 usethis::use_tidy_description()
 
 
 
 
 # Add new functions -----------------------------------------------
-# .add_function("fct_name")
+.add_function("ldt")
+.add_function("utils")
+.add_function("print")
+.add_function("extractors")
 
+usethis::use_tibble()
 
 
 
