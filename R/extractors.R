@@ -1,41 +1,45 @@
+#' @export
 censor <- function(x) {
   UseMethod("censor")
 }
 
-# @export
+#' @export
 censor.ldt <- function(x) {
   attr(x, "censor")
 }
 
 
 
+#' @export
 risk_table <- function(x) {
   UseMethod("risk_table")
 }
 
-# @export
+#' @export
 risk_table.ldt <- function(x) {
   attr(x, "risk_table")
 }
 
 
 
+#' @export
 estimate <- function(x) {
   UseMethod("estimate")
 }
 
-# @export
+#' @export
 estimate.ldt <- function(x) {
   attr(x, "estimate")
 }
 
 
 
+#' @export
 get_call <- function(x) {
   UseMethod("get_call")
 }
 
-# @export
+#' @export
 get_call.ldt <- function(x) {
   attr(x, "call")
 }

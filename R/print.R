@@ -16,7 +16,8 @@ print.ldt <- function(x, ...) {
       LCL95 = time_at(t, surv, "lcl"),
       UCL95 = time_at(t, surv, "ucl")
     ) |>
-    tibble::as_tibble()
+    tibble::as_tibble() |>
+    print()
 }
 
 

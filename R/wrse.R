@@ -20,6 +20,9 @@ wrse <- function(db, L = .Machine$double.xmax) {
   if (is.null(db$X)) {
     stop("X can not be empty")
   }
+  # if (is.null(data$TR)) {
+  #   stop("TR can not be empty")
+  # }
   if (is.null(db$R)) {
     stop("R can not be empty")
   }
